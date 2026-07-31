@@ -1,6 +1,6 @@
 # Agent Install Guide
 
-Use this flow when installing any schema from this repository into an existing OpenSpec project.
+Use this flow when installing any schema from this repository into an existing OpenSpec project. Schemas declare their companion skills in a `skills.txt` manifest inside the schema directory; those skills are sourced from https://github.com/intent-driven-dev/skills and installed in Step 6.
 
 ## Prerequisites
 
@@ -77,3 +77,44 @@ Validation Results:
 ```
 
 Replace `intent-driven` with the schema name you installed. If validation fails, report the error output to the user.
+
+## Step 6 — Install Associated Skills
+
+Check whether the installed schema declares associated skills. The manifest lives inside the schema directory you copied in Step 3:
+
+**Option A install:**
+
+```bash
+cat ./openspec/schemas/<schema-name>/skills.txt
+```
+
+**Option B install:**
+
+```bash
+cat $HOME/.openspec/schemas/<schema-name>/skills.txt
+```
+
+**If there is no `skills.txt`**, skip this step — the schema has no associated skills.
+
+Otherwise, clone the skills repository to a tmp folder. If `/tmp/openspec-skills` already exists, remove it first (or clone to a fresh temp dir):
+
+```bash
+rm -rf /tmp/openspec-skills
+git clone --depth 1 https://github.com/intent-driven-dev/skills.git /tmp/openspec-skills
+```
+
+For each line in `skills.txt`, copy that skill into the target project:
+
+```bash
+mkdir -p ./.agents/skills
+cp -R /tmp/openspec-skills/.agents/skills/<skill-name> ./.agents/skills/<skill-name>
+```
+
+- **If `./.agents/skills/<skill-name>` already exists** in the target project, do not overwrite it silently — ask the user whether to replace it or keep their copy.
+- **If a listed skill does not exist** in the clone, report it to the user and continue with the remaining skills.
+
+Finish by listing what was installed, for example:
+
+```text
+Installed skills: architectural-decision-records, openspec-git-discipline → ./.agents/skills/
+```

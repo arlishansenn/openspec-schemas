@@ -55,4 +55,12 @@ Event-driven schema mapping notes:
   `Read Model/Projection` labels in event-storming artifacts; both map to
   `readModel` (green).
 
+## Associated Skills
+
+This schema declares its companion skills in `skills.txt`; they are installed automatically by Step 6 of `AGENT_INSTALL.md` into `.agents/skills/`, sourced from [intent-driven-dev/skills](https://github.com/intent-driven-dev/skills).
+
+- `c4-diagrams` — C4-style architecture diagrams in ASCII or Mermaid.
+- `glossary` — keeping domain/technical terms consistent across artifacts.
+- `openspec-git-discipline` — git hygiene for OpenSpec propose/apply/archive workflows.
+
 For more schemas, refer to https://github.com/intent-driven-dev/openspec-schemas.

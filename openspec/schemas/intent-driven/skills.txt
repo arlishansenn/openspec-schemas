@@ -1,0 +1,6 @@
+architectural-decision-records
+gherkin-authoring
+c4-diagrams
+glossary
+grill-me
+openspec-git-discipline

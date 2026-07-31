@@ -1,0 +1,3 @@
+gherkin-authoring
+glossary
+openspec-git-discipline

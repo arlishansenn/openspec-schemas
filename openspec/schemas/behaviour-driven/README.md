@@ -65,3 +65,11 @@ OpenSpec specs -> feature files -> failing Cucumber.js acceptance tests -> imple
 ```bash
 openspec schema validate behaviour-driven
 ```
+
+## Associated Skills
+
+This schema declares its companion skills in `skills.txt`; they are installed automatically by Step 6 of `AGENT_INSTALL.md` into `.agents/skills/`, sourced from [intent-driven-dev/skills](https://github.com/intent-driven-dev/skills).
+
+- `gherkin-authoring` — writing and reviewing Gherkin/BDD scenarios.
+- `glossary` — keeping domain/technical terms consistent across artifacts.
+- `openspec-git-discipline` — git hygiene for OpenSpec propose/apply/archive workflows.
