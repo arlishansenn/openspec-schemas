@@ -16,6 +16,36 @@ The repository SHALL organize custom OpenSpec schemas as one folder per schema, 
 - **THEN** the unproposed schema folder is removed before the proposal-backed replacement is added
 - **AND** repository catalog documentation no longer advertises that schema until the replacement is archived.
 
+### Requirement: Each schema SHALL declare companion skills in a manifest
+Each schema folder SHALL contain a `skills.txt` manifest listing its companion skills, one skill name per line and nothing else, where every listed name exactly matches a directory under `.agents/skills/` in https://github.com/intent-driven-dev/skills. Because the manifest lives inside the schema folder, copying the schema carries the manifest into the target project.
+
+#### Scenario: All packaged schemas declare their skills
+- **WHEN** a user inspects any schema folder under `openspec/schemas/`
+- **THEN** it contains a `skills.txt` manifest:
+  - `minimalist`: `openspec-git-discipline`
+  - `behaviour-driven`: `gherkin-authoring`, `glossary`, `openspec-git-discipline`
+  - `intent-driven`: `architectural-decision-records`, `gherkin-authoring`, `c4-diagrams`, `glossary`, `grill-me`, `openspec-git-discipline`
+  - `spec-driven-with-adr`: `architectural-decision-records`, `openspec-git-discipline`
+  - `event-driven`: `c4-diagrams`, `glossary`, `openspec-git-discipline`
+
+#### Scenario: Manifest names resolve in the canonical skills repository
+- **WHEN** the skills repository is freshly cloned
+- **THEN** every name in every `skills.txt` exactly matches a directory under `.agents/skills/` in that clone
+
+### Requirement: Schema READMEs SHALL document associated skills
+Each schema README SHALL include an "Associated Skills" section listing exactly the skills from that schema's `skills.txt` with a one-line purpose each, linking to https://github.com/intent-driven-dev/skills, and noting that the skills are installed automatically by the install guide's skills step into `.agents/skills/`. The `spec-driven-with-adr` README SHALL point ADR skill references at the canonical skills repository rather than the retired `intent-driven-template` location and SHALL NOT list schema/skill packaging as pending.
+
+#### Scenario: Reader learns a schema's companion skills from its README
+- **WHEN** a user reads the "Associated Skills" section of a schema README
+- **THEN** it lists exactly the skills from that schema's `skills.txt`, each with a one-line purpose
+- **AND** it links to https://github.com/intent-driven-dev/skills
+- **AND** it notes automatic installation into `.agents/skills/` via the install guide
+
+#### Scenario: spec-driven-with-adr README points at the canonical skills repo
+- **WHEN** a user follows the ADR skills reference in `openspec/schemas/spec-driven-with-adr/README.md`
+- **THEN** it points to https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/architectural-decision-records
+- **AND** the README no longer lists "Package schema and associated skills together" as pending
+
 ### Requirement: Each schema SHALL include usage and activation guidance
 Each custom schema folder SHALL include documentation that explains intended use, unsuitable use cases, and activation steps through `openspec/config.yaml`.
 
