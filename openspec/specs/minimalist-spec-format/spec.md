@@ -29,7 +29,7 @@ Affected schema:
 - **THEN** running `openspec schema validate minimalist` succeeds and confirms the schema remains valid after these format changes
 
 ### Requirement: Spec artifact authoring expectations
-The minimalist schema's previous free-form requirement/scenario guidance is replaced with explicit user-story structure and Gherkin acceptance criteria for clearer, testable specification authoring.
+The minimalist schema MUST replace its previous free-form requirement/scenario guidance with explicit user-story structure and Gherkin acceptance criteria for clearer, testable specification authoring.
 
 #### Scenario: Existing contributors adapt to the revised structure
 - **WHEN** an author updates an existing change spec under the minimalist workflow
