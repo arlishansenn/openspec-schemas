@@ -37,3 +37,39 @@ Define the behavior of the standalone `AGENT_INSTALL.md` guide that coding agent
 #### Scenario: Reader learns where installed skills come from
 - **WHEN** a reader opens `AGENT_INSTALL.md`
 - **THEN** they can find a sentence explaining the `skills.txt` manifest convention and the canonical skills repository
+
+### Requirement: Install guide SHALL be a standalone agent-agnostic file
+The repository SHALL keep the AI agent install instructions in a single standalone `AGENT_INSTALL.md` file at the repository root, shared by all agents, so that the README stays focused and the install flow has one authoritative source.
+
+#### Scenario: Standalone guide exists at the repository root
+- **GIVEN** the repository root
+- **WHEN** a reader looks for agent install instructions
+- **THEN** an `AGENT_INSTALL.md` file at the repository root contains the full step-by-step install flow for any schema in this repository
+- **AND** the file is agent-agnostic (no instruction is tied to a specific coding agent)
+- **AND** the file name does not collide with the `AGENTS.md` convention used for general agent/project instructions
+
+### Requirement: Guide SHALL enumerate schemas and require picking exactly one
+`AGENT_INSTALL.md` SHALL instruct the agent to enumerate every available schema and have the user choose exactly one to install and enable.
+
+#### Scenario: Agent enumerates schemas and the user picks one
+- **GIVEN** an agent is following `AGENT_INSTALL.md`
+- **WHEN** the agent reaches the schema-selection step
+- **THEN** the flow instructs the agent to enumerate all available schemas by listing the directories under `openspec/schemas/` in this repository
+- **AND** the agent presents that list and asks the user to pick exactly one schema to install and enable
+- **AND** the agent proceeds with the clone/copy and activation steps only after the user has chosen exactly one schema
+- **AND** if the user named a schema up front, the agent confirms it matches one of the enumerated schemas before proceeding
+
+### Requirement: README SHALL delegate install steps to the guide
+The README "Install a Schema" section SHALL point agents at `AGENT_INSTALL.md` with a short trigger prompt rather than embedding detailed install steps, so that no install step is documented in two places.
+
+#### Scenario: README trigger points the agent at the guide
+- **GIVEN** the README "Install a Schema" section
+- **WHEN** a reader reads the agent trigger prompt
+- **THEN** it instructs the agent to read `AGENT_INSTALL.md` and follow the instructions, without embedding the detailed install steps inline
+- **AND** the trigger does not require the user to name a schema in the prompt (the guide enumerates schemas and asks)
+
+#### Scenario: README contains no duplicated install flow
+- **GIVEN** the README
+- **WHEN** a reader reaches the agent install content
+- **THEN** the embedded step-by-step flow is removed and replaced by a pointer to `AGENT_INSTALL.md`
+- **AND** no install step is documented in two places
