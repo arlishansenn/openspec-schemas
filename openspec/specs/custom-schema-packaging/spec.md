@@ -54,7 +54,7 @@ Each custom schema folder SHALL include documentation that explains intended use
 - **THEN** it can determine whether the schema fits and can instruct the user to set `schema: <schema-name>` in `openspec/config.yaml`
 
 ### Requirement: Repository root SHALL provide catalog and install guidance for humans and agents
-The repository root SHALL include a `README.md` that explains the purpose of this schema collection, starts the main install section with an agent-oriented prompt that points to the raw root `README.md`, gives a self-install fallback for human readers, includes a dedicated agent-oriented install flow that removes ambiguity about prerequisites and copying the full schema folder, and lists only currently packaged schemas with canonical spec coverage.
+The repository root SHALL include a `README.md` that explains the purpose of this schema collection, starts the main install section with an agent-oriented prompt that points to the raw root `README.md`, gives a self-install fallback for human readers, includes a dedicated agent-oriented install flow that removes ambiguity about prerequisites and copying the full schema folder, and lists only currently packaged schemas with canonical spec coverage. The install section SHALL also note that schemas declare companion skills in a `skills.txt` manifest and that the install guide's skills step installs those skills into `.agents/skills/` from https://github.com/intent-driven-dev/skills.
 
 #### Scenario: Human discovers schema options from repo root
 - **WHEN** a human user opens the repository root `README.md`
@@ -81,9 +81,20 @@ The repository root SHALL include a `README.md` that explains the purpose of thi
 - **AND** the README no longer points readers to `openspec/schemas/linearized/README.md`
 - **AND** install examples no longer tell agents to activate `schema: linearized`
 
+#### Scenario: Reader learns about associated skills from the root README
+- **WHEN** a human or coding agent reads the "Install a Schema" section of the root `README.md`
+- **THEN** they learn that each schema declares companion skills in a `skills.txt` manifest
+- **AND** they learn the install guide's skills step installs those skills into `.agents/skills/` from https://github.com/intent-driven-dev/skills
+
+#### Scenario: Post-apply validation still passes
+- **WHEN** the root `README.md` update is applied
+- **THEN** no files under `openspec/schemas/` change (no schemas are affected)
+- **AND** `openspec schema validate` continues to pass as a sanity check
+
 ### Requirement: Schema changes SHALL be validated with OpenSpec CLI
 Any new schema or schema modification in this repository SHALL be verified by running `openspec schema validate <schema-name>` before considering the change complete.
 
 #### Scenario: Schema passes structural validation
 - **WHEN** a contributor finishes creating or editing a schema
 - **THEN** they run `openspec schema validate <schema-name>` and confirm the command reports successful validation
+
