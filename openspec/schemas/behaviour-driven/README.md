@@ -1,24 +1,82 @@
 # Behaviour-Driven OpenSpec Schema
 
-`behaviour-driven` is a strict BDD workflow for changes whose implementation
-must be driven by observable Gherkin acceptance tests.
+`behaviour-driven` is a spec-as-source BDD workflow: business use cases are
+written as Gherkin scenarios inside Markdown specs, and those scenarios run as
+the acceptance suite that every change must keep green. Directly updating code
+without first updating the spec is forbidden — every change starts as a spec
+delta whose red scenarios define the work.
 
-The schema keeps OpenSpec delta specs mergeable while requiring downstream
-projects to extract root-level `features/*.feature` files, test them with a
-root-level `acceptance-tests/` Node project, and pass Cucumber.js before the
-implementation gate is complete.
+## The Two Rules
 
-## Directory Roles
+1. **Acceptance tests must always pass.** Run the suite after every code
+   change; never leave it red. If failing code was written without a driving
+   spec delta, it is reverted and redone spec-first — never patched into
+   passing.
+2. **Specs and code are never modified together.** A unit of work touches
+   either `openspec/` (the specs zone) or application code, never both.
+   `tasks.md` files are exempt. The `bdd-zone-check` skill documents the
+   discipline and a reference pre-edit hook that enforces it.
 
-- **`features/`** — canonical executable behaviour documentation. Feature
-  files are derived from OpenSpec Markdown specs and define the observable
-  behaviour. They are committed before implementation begins and
-  treated as off limits for ordinary implementation fixes.
+## Spec Format
 
-- **`acceptance-tests/`** — runtime and test glue. Contains the Cucumber.js
-  Node project, step definitions, fixtures, helpers, environment setup, HTML
-  reports, and configuration. It wires the `features/` to runnable
-  tests but does not own the behaviour definition.
+A spec is a standard Markdown `spec.md`: prose (context, rationale, links) may
+appear anywhere, and ALL executable Gherkin lives inside fences opened by
+` ```gherkin ` at column 0. Each file's fences concatenate into exactly one
+`Feature:` (the capability). `Rule:` is one requirement, described with
+SHALL/MUST; `Scenario:` is a concrete Given/When/Then example, and every
+`Rule:` has at least one. Delta operations are `# @openspec:` comments inside
+a fence, immediately above the `Rule:` they apply to:
+
+````markdown
+# User authentication changes
+
+Login is being tightened — see proposal.md for motivation.
+
+```gherkin
+Feature: User authentication changes
+
+  # @openspec: ADDED
+  Rule: Email must be verified before login
+    Unverified accounts MUST NOT be able to log in to the system.
+
+    Scenario: Unverified user is blocked
+      Given an account with an unverified email address
+      When the user attempts to log in
+      Then access is denied
+```
+````
+
+The machine-readable definition of this format (fence, requirement, scenario,
+and delta-marker patterns) is the `format:` block in `schema.yaml`.
+
+## Canonical Flow
+
+Artifact order:
+
+```text
+proposal -> (specs, design) -> tasks
+```
+
+`specs` and `design` each require only the proposal and can proceed in
+parallel; `tasks` requires both. At apply time, the generated tasks first
+scaffold the acceptance suite (once per project), then work one pending step
+definition at a time — fails for the right reason → implement → passes →
+commit — until the full suite is green with zero pending or undefined steps.
+
+## Supported Stacks
+
+The acceptance suite is stack-agnostic, selected by `stack:` in
+`openspec/config.yaml`:
+
+| `stack:` | Runner | Report |
+|---|---|---|
+| `javascript` | cucumber-js | `acceptance-tests/reports/cucumber-report.html` |
+| `python` | behave (1.2.7+, for Gherkin v6 `Rule:` support) | `acceptance-tests/reports/behave-report.html` |
+
+Spec linting is shared: `gherkin-lint` over the extracted output, with one
+pinned config for both, so the two stacks accept and reject exactly the same
+specs. The extraction, effective-spec composition, and runner contract are
+defined by the `acceptance-test-authoring` skill.
 
 ## Activate
 
@@ -26,39 +84,13 @@ Set this in `openspec/config.yaml`:
 
 ```yaml
 schema: behaviour-driven
+stack: javascript # or python
 ```
 
-## Canonical Flow
-
-Artifact order:
-
-```text
-proposal -> specs -> design -> tasks
-```
-
-Apply-time order:
-
-```text
-OpenSpec specs -> feature files -> failing Cucumber.js acceptance tests -> implementation -> passing Cucumber.js acceptance tests
-```
-
-## Strict BDD Gates
-
-- Extract or update root `features/*.feature` files before writing acceptance
-  test code.
-- Run `gherkin-lint` from `acceptance-tests/` and require zero errors before
-  the feature extraction commit.
-- Use a root `acceptance-tests/` Node project with Cucumber.js, JavaScript lint
-  scripts, ignored `node_modules/`, and HTML acceptance reports.
-- Commit the failing acceptance setup before implementation starts; the failure
-  must be the intended unimplemented application behaviour, not test plumbing.
-- Run acceptance fixes as a bounded retry loop using the attempt limit recorded
-  in `tasks.md`, defaulting to 3 when none is chosen.
-- Commit after feature extraction, after failing acceptance setup, and after the
-  passing implementation. Stop before crossing a gate if its commit cannot be
-  made.
-- Never weaken committed feature files or acceptance tests to make the
-  implementation pass.
+Note on spelling: the `acceptance-test-authoring` skill's upstream docs show
+`schema: behavior-driven` (American spelling, from the behavior-driven-template
+repo). In this package the schema name is `behaviour-driven` — use the British
+spelling in `config.yaml`.
 
 ## Validate
 
@@ -70,6 +102,8 @@ openspec schema validate behaviour-driven
 
 This schema declares its companion skills in `skills.txt`; they are installed automatically by Step 6 of `AGENT_INSTALL.md` into `.agents/skills/`, sourced from [intent-driven-dev/skills](https://github.com/intent-driven-dev/skills).
 
+- `acceptance-test-authoring` — the acceptance-suite contract: Gherkin extraction from `spec.md` fences, effective-spec composition (source of truth + active deltas), runner setup for both stacks, linting, and reports.
+- `bdd-zone-check` — spec-first discipline and specs/code zone isolation, with a reference enforcement hook.
 - `gherkin-authoring` — writing and reviewing Gherkin/BDD scenarios.
 - `glossary` — keeping domain/technical terms consistent across artifacts.
 - `openspec-git-discipline` — git hygiene for OpenSpec propose/apply/archive workflows.

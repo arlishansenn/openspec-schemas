@@ -1,26 +1,16 @@
-## ADDED Requirements
+# <!-- capability name -->
 
-### Requirement: <!-- feature or business rule name -->
-<!-- Optional Gherkin-style context, for example:
-Feature: <capability>
-Rule: <business rule>
+<!-- Optional prose: context, rationale, links. Only column-0 ```gherkin fences are executable. -->
 
-Keep this markdown tight enough that downstream task generation can derive a
-root-level `features/*.feature` file from it.
--->
+```gherkin
+Feature: <!-- capability name -->
 
-#### Scenario: <!-- scenario name -->
-- **GIVEN** <!-- starting context -->
-- **WHEN** <!-- action or event -->
-- **THEN** <!-- observable outcome -->
+  # @openspec: ADDED
+  Rule: <!-- requirement name -->
+    <!-- requirement description: use SHALL/MUST -->
 
-## MODIFIED Requirements
-
-<!-- Copy the full existing requirement block from openspec/specs/<capability>/spec.md, then edit it so it represents the full desired behaviour after the change. The resulting markdown should remain suitable for translating into a root-level `features/*.feature` file. If a corresponding feature file already exists, update that file in place when the feature is extracted. -->
-
-## REMOVED Requirements
-
-### Requirement: <!-- removed feature or business rule name -->
-**Reason**: <!-- why this behaviour is removed -->
-
-**Migration**: <!-- how users or systems should adapt -->
+    Scenario: <!-- scenario name -->
+      Given <!-- precondition -->
+      When <!-- action -->
+      Then <!-- expected outcome -->
+```

@@ -1,6 +1,6 @@
 name: intent-driven
 version: 1
-description: Intent-driven OpenSpec workflow - proposal -> Gherkin-style specs -> design -> adr -> tasks
+description: Intent-driven workflow - proposal → specs (Markdown with fenced Gherkin) → design → adr → tasks
 artifacts:
   - id: proposal
     generates: proposal.md
@@ -19,9 +19,9 @@ artifacts:
       capabilities, modifications, or removals. Mark breaking changes with
       **BREAKING**.
 
-      - **Capabilities**: Identify which behaviour specs will be created or modified:
+      - **Capabilities**: Identify which specs will be created or modified:
         - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `user-auth`, `data-export`).
-        - **Modified Capabilities**: List existing capabilities whose behaviour is changing. Only include if spec-level behaviour changes, not just implementation details. Each needs an OpenSpec Markdown delta file at `specs/<name>/spec.md`. Check `openspec/specs/` for existing spec names. Leave empty if no behaviour changes.
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behaviour changes (not just implementation details). Each needs a delta spec file. Check `openspec/specs/` for existing spec names. Leave empty if no requirement changes.
       - **Impact**: Affected code, APIs, dependencies, or systems.
 
 
@@ -41,82 +41,94 @@ artifacts:
       This is the foundation - specs, design, adr, and tasks all build on this.
     requires: []
   - id: specs
-    generates: specs/**/*.md
-    description: OpenSpec Markdown specs with Gherkin-style behaviour scenarios
+    generates: "specs/**/spec.md"
+    description: Detailed specifications for the change (Markdown with fenced Gherkin)
     template: spec.md
-    instruction: >
-      Create OpenSpec Markdown spec files that define WHAT the system should do.
-      The Markdown structure is the OpenSpec merge wrapper; the requirement and
-      scenario content inside that wrapper should be written in Gherkin style.
+    instruction: |
+      Create `spec.md` spec files that define WHAT the system should do.
 
+      Create one `spec.md` per capability listed in the proposal's Capabilities
+      section — a standard Markdown document: prose (context, rationale, links)
+      may appear anywhere, and ALL executable Gherkin lives inside fenced code
+      blocks.
 
-      Create one spec file per capability listed in the proposal's Capabilities
-      section.
-
+      Paths:
       - New capabilities: use the exact kebab-case name from the proposal
-      (specs/<capability>/spec.md).
-
+        (specs/<capability>/spec.md).
       - Modified capabilities: use the existing spec folder name from
-      openspec/specs/<capability>/ when creating the delta spec at
-      specs/<capability>/spec.md.
+        openspec/specs/<capability>/ when creating the delta spec at
+        specs/<capability>/spec.md.
 
+      Fence contract (the extractor and the acceptance-test runner depend on it):
+      - Gherkin is executable ONLY inside fences opened by ```gherkin at
+        column 0 (info string exactly `gherkin`, nothing more) and closed by
+        ``` at column 0. An indented ```gherkin fence is a hard extraction
+        error; gherkin quoted inside any other fence is treated as prose.
+      - Every spec.md MUST contain at least one gherkin fence.
+      - Multiple gherkin fences concatenate in file order and MUST parse as
+        exactly ONE top-level `Feature:` — the first fence opens with the
+        `Feature:` line (tags, if any, in the same fence immediately above it).
 
-      Delta operations (use ## headers exactly so OpenSpec archive can merge):
+      Gherkin structure (how Gherkin keywords map onto OpenSpec concepts):
+      - **Feature:** — the spec file / capability. Exactly one per spec.md.
+      - **Rule:** — one requirement. Each `Rule:` is followed by a short
+        description line. Use SHALL/MUST for normative requirements (avoid
+        should/may).
+      - **Scenario:** — a concrete example, written with Given/When/Then steps.
+      - Every `Rule:` MUST have at least one `Scenario:`.
 
-      - **ADDED Requirements**: New behaviour capabilities.
+      Delta operations use an inline `# @openspec:` marker comment placed
+      INSIDE a gherkin fence, immediately ABOVE the `Rule:` it applies to:
+      - `# @openspec: ADDED` — new requirement (include full Rule + scenarios)
+      - `# @openspec: MODIFIED` — changed behaviour (include the FULL updated
+        Rule + all scenarios, not a partial edit)
+      - `# @openspec: REMOVED` — deprecated requirement (the `Rule:` line
+        naming it is enough)
+      - `# @openspec: RENAMED from="<old name>" to="<new name>"` — name change
+        only
 
-      - **MODIFIED Requirements**: Changed behaviour - MUST include the full
-      updated requirement content, not a partial diff.
+      MODIFIED workflow: locate the existing `Rule:` in
+      openspec/specs/<capability>/spec.md, copy the ENTIRE block (Rule
+      description through all scenarios), place it under `# @openspec: MODIFIED`,
+      and edit. Partial MODIFIED content loses detail at archive time — if adding
+      new concerns without changing existing behaviour, use ADDED instead.
 
-      - **REMOVED Requirements**: Deprecated behaviours - MUST include
-      **Reason** and **Migration**.
+      Example delta spec.md (prose + fence):
 
-      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format.
+      ````markdown
+      # User authentication changes
 
+      Login is being tightened: accounts must verify their email address
+      before they may log in. See proposal.md for motivation.
 
-      OpenSpec wrapper requirements:
+      ```gherkin
+      Feature: User authentication changes
 
-      - Each requirement MUST use `### Requirement: <name>`.
+        # @openspec: ADDED
+        Rule: Email must be verified before login
+          Unverified accounts MUST NOT be able to log in to the system.
 
-      - Each scenario MUST use `#### Scenario: <name>`. This exact four-hash
-      heading is required for OpenSpec validation and archive.
+          Scenario: Unverified user is blocked
+            Given an account with an unverified email address
+            When the user attempts to log in
+            Then access is denied
 
-      - Every requirement MUST have at least one scenario.
+        # @openspec: REMOVED
+        Rule: Session expires after inactivity
 
+        # @openspec: RENAMED from="Password must meet complexity requirements" to="Password complexity is enforced"
+      ```
+      ````
 
-      Gherkin-style content requirements:
+      Specs should be testable - each scenario is a potential test case. The
+      prose renders normally on GitHub; the fences are exactly what the
+      acceptance suite executes.
 
-      - Treat each requirement as the feature or business rule being specified.
-      You may include `Feature:` or `Rule:` prose in the requirement body when
-      it clarifies the behaviour.
-
-      - Each scenario MUST describe behaviour with `GIVEN`, `WHEN`, and `THEN`
-      steps. Use `AND` or `BUT` for follow-on steps.
-
-      - Write observable outcomes in `THEN` steps. Avoid implementation details
-      such as database table names, private methods, or UI selectors unless
-      they are part of the domain contract.
-
-      - Do not create `.feature` files for this artifact. External Gherkin
-      linting is outside this schema; `spec.md` is required for OpenSpec merge.
-
-
-      MODIFIED requirements workflow:
-
-      1. Locate the existing requirement in openspec/specs/<capability>/spec.md.
-
-      2. Copy the ENTIRE requirement block (from `### Requirement:` through all
-      scenarios).
-
-      3. Paste under `## MODIFIED Requirements` and edit it so the copied block
-      represents the full desired behaviour after the change.
-
-      4. Ensure header text matches exactly (whitespace-insensitive).
-
-
-      Common pitfall: Using MODIFIED with partial content loses detail at
-      archive time. If adding new concerns without changing existing behaviour,
-      use ADDED instead.
+      Before considering a spec complete, extract the Gherkin and lint it with
+      gherkin-lint, fixing every reported issue. Linting is the same for every
+      stack, so a spec that lints clean does so regardless of which runner the
+      project uses. See the acceptance-test-authoring skill for your stack's
+      extraction + lint commands and their required flags.
     requires:
       - proposal
   - id: design
@@ -257,25 +269,42 @@ artifacts:
 
 
       **IMPORTANT: Follow the template below exactly.** The apply phase parses
+
       checkbox format to track progress. Tasks not using `- [ ]` won't be
       tracked.
 
 
       Guidelines:
 
-      - Group related tasks under ## numbered headings.
+      - Group related tasks under ## numbered headings
 
-      - Each task MUST be a checkbox: `- [ ] X.Y Task description`.
+      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
 
-      - Tasks should be small enough to complete in one session.
+      - Tasks should be small enough to complete in one session
 
-      - Order tasks by dependency (what must be done first?).
+      - Order tasks by dependency (what must be done first?)
 
-      - If implementation changes behaviour specs, include a task to run
-      `openspec validate <change> --type change --strict` before archive.
+
+      The template's first-time-setup section is written against whichever
+
+      acceptance stack the project uses. Read `stack:` from
+      `openspec/config.yaml`
+
+      (`javascript` or `python`) and substitute it wherever the template says
+
+      `<stack>`, inlining the concrete destination filenames from that stack's
+
+      "Files to copy" table in the acceptance-test-authoring skill
+
+      (`references/<stack>/SETUP.md`). The authored tasks.md must name real
+
+      filenames, not placeholders. If `stack:` is absent, task 1.1 records it
+
+      first — do not guess it.
 
 
       Reference specs for what to build, design for how to build it, and
+
       <repo>/adr/ for durable architectural commitments to honor.
 
       Each task should be verifiable - you know when it's done.
@@ -289,3 +318,14 @@ apply:
   instruction: |
     Read context files, work through pending tasks, mark complete as you go.
     Pause if you hit blockers or need clarification.
+format:
+  extension: ".md"
+  fence:
+    open: '^```gherkin\s*$'
+    close: '^```\s*$'
+  # requirement, scenario and delta below match lines INSIDE ```gherkin fences:
+  requirement: '^\s*Rule:\s*(?<name>.+)$'
+  scenario: '^\s*Scenario:'
+  delta:
+    marker: '@openspec:\s*(?<op>ADDED|MODIFIED|REMOVED|RENAMED)'
+    rename: '@openspec:\s*RENAMED\s+from="(?<from>[^"]+)"\s+to="(?<to>[^"]+)"'

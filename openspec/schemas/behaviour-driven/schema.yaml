@@ -1,6 +1,6 @@
 name: behaviour-driven
 version: 1
-description: Behaviour-driven OpenSpec workflow - proposal -> Gherkin-style specs -> feature files -> acceptance tests -> tasks
+description: Behaviour-driven workflow - proposal → specs (Markdown with fenced Gherkin) → design → tasks
 artifacts:
   - id: proposal
     generates: proposal.md
@@ -19,108 +19,116 @@ artifacts:
       capabilities, modifications, or removals. Mark breaking changes with
       **BREAKING**.
 
-      - **Capabilities**: Identify which behaviour specs will be created or modified:
+      - **Capabilities**: Identify which specs will be created or modified:
         - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `user-auth`, `data-export`).
-        - **Modified Capabilities**: List existing capabilities whose behaviour is changing. Only include if spec-level behaviour changes, not just implementation details. Each needs an OpenSpec Markdown delta file at `specs/<name>/spec.md`. Check `openspec/specs/` for existing spec names. Leave empty if no behaviour changes.
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behaviour changes (not just implementation details). Each needs a delta spec file. Check `openspec/specs/` for existing spec names. Leave empty if no requirement changes.
       - **Impact**: Affected code, APIs, dependencies, or systems.
 
 
-      IMPORTANT: The Capabilities section is critical. It creates the link
-      between proposal and specs phases. Research existing specs before filling
-      this in. Each capability listed here will need a corresponding spec file.
+      IMPORTANT: The Capabilities section is critical. It creates the contract
+      between
+
+      proposal and specs phases. Research existing specs before filling this in.
+
+      Each capability listed here will need a corresponding spec file.
 
 
       Keep it concise (1-2 pages). Focus on the "why" not the "how" -
+
       implementation details belong in design.md.
 
 
       This is the foundation - specs, design, and tasks all build on this.
     requires: []
   - id: specs
-    generates: specs/**/*.md
-    description: OpenSpec Markdown specs that can be distilled into feature files and acceptance tests
+    generates: "specs/**/spec.md"
+    description: Detailed specifications for the change (Markdown with fenced Gherkin)
     template: spec.md
-    instruction: >
-      Create OpenSpec Markdown spec files that define WHAT the system should do.
-      The Markdown structure is the OpenSpec merge wrapper; the requirement and
-      scenario content inside that wrapper should be written in Gherkin style
-      so it can be translated into downstream `features/*.feature` files and
-      `acceptance-tests/` step definitions.
+    instruction: |
+      Create `spec.md` spec files that define WHAT the system should do.
 
+      Create one `spec.md` per capability listed in the proposal's Capabilities
+      section — a standard Markdown document: prose (context, rationale, links)
+      may appear anywhere, and ALL executable Gherkin lives inside fenced code
+      blocks.
 
-      Create one spec file per capability listed in the proposal's Capabilities
-      section.
-
+      Paths:
       - New capabilities: use the exact kebab-case name from the proposal
-      (specs/<capability>/spec.md).
-
+        (specs/<capability>/spec.md).
       - Modified capabilities: use the existing spec folder name from
-      openspec/specs/<capability>/ when creating the delta spec at
-      specs/<capability>/spec.md.
+        openspec/specs/<capability>/ when creating the delta spec at
+        specs/<capability>/spec.md.
 
+      Fence contract (the extractor and the acceptance-test runner depend on it):
+      - Gherkin is executable ONLY inside fences opened by ```gherkin at
+        column 0 (info string exactly `gherkin`, nothing more) and closed by
+        ``` at column 0. An indented ```gherkin fence is a hard extraction
+        error; gherkin quoted inside any other fence is treated as prose.
+      - Every spec.md MUST contain at least one gherkin fence.
+      - Multiple gherkin fences concatenate in file order and MUST parse as
+        exactly ONE top-level `Feature:` — the first fence opens with the
+        `Feature:` line (tags, if any, in the same fence immediately above it).
 
-      Delta operations (use ## headers exactly so OpenSpec archive can merge):
+      Gherkin structure (how Gherkin keywords map onto OpenSpec concepts):
+      - **Feature:** — the spec file / capability. Exactly one per spec.md.
+      - **Rule:** — one requirement. Each `Rule:` is followed by a short
+        description line. Use SHALL/MUST for normative requirements (avoid
+        should/may).
+      - **Scenario:** — a concrete example, written with Given/When/Then steps.
+      - Every `Rule:` MUST have at least one `Scenario:`.
 
-      - **ADDED Requirements**: New behaviour capabilities.
+      Delta operations use an inline `# @openspec:` marker comment placed
+      INSIDE a gherkin fence, immediately ABOVE the `Rule:` it applies to:
+      - `# @openspec: ADDED` — new requirement (include full Rule + scenarios)
+      - `# @openspec: MODIFIED` — changed behaviour (include the FULL updated
+        Rule + all scenarios, not a partial edit)
+      - `# @openspec: REMOVED` — deprecated requirement (the `Rule:` line
+        naming it is enough)
+      - `# @openspec: RENAMED from="<old name>" to="<new name>"` — name change
+        only
 
-      - **MODIFIED Requirements**: Changed behaviour - MUST include the full
-      updated requirement content, not a partial diff.
+      MODIFIED workflow: locate the existing `Rule:` in
+      openspec/specs/<capability>/spec.md, copy the ENTIRE block (Rule
+      description through all scenarios), place it under `# @openspec: MODIFIED`,
+      and edit. Partial MODIFIED content loses detail at archive time — if adding
+      new concerns without changing existing behaviour, use ADDED instead.
 
-      - **REMOVED Requirements**: Deprecated behaviours - MUST include
-      **Reason** and **Migration**.
+      Example delta spec.md (prose + fence):
 
-      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format.
+      ````markdown
+      # User authentication changes
 
+      Login is being tightened: accounts must verify their email address
+      before they may log in. See proposal.md for motivation.
 
-      OpenSpec wrapper requirements:
+      ```gherkin
+      Feature: User authentication changes
 
-      - Each requirement MUST use `### Requirement: <name>`.
+        # @openspec: ADDED
+        Rule: Email must be verified before login
+          Unverified accounts MUST NOT be able to log in to the system.
 
-      - Each scenario MUST use `#### Scenario: <name>`. This exact four-hash
-      heading is required for OpenSpec validation and archive.
+          Scenario: Unverified user is blocked
+            Given an account with an unverified email address
+            When the user attempts to log in
+            Then access is denied
 
-      - Every requirement MUST have at least one scenario.
+        # @openspec: REMOVED
+        Rule: Session expires after inactivity
 
+        # @openspec: RENAMED from="Password must meet complexity requirements" to="Password complexity is enforced"
+      ```
+      ````
 
-      Gherkin-style content requirements:
+      Specs should be testable - each scenario is a potential test case. The
+      prose renders normally on GitHub; the fences are exactly what the
+      acceptance suite executes.
 
-      - Treat each requirement as the feature or business rule being specified.
-      You may include `Feature:` or `Rule:` prose in the requirement body when
-      it clarifies the behaviour.
-
-      - Each scenario MUST describe behaviour with `GIVEN`, `WHEN`, and `THEN`
-      steps. Use `AND` or `BUT` for follow-on steps.
-
-      - Write observable outcomes in `THEN` steps. Avoid implementation details
-        such as database table names, private methods, or UI selectors unless
-        they are part of the domain specification.
-
-      - Keep the behaviour description precise enough that downstream task
-        generation can derive or update a root-level `features/*.feature` file
-        and a root-level `acceptance-tests/` Node project.
-
-
-      MODIFIED requirements workflow:
-
-      1. Locate the existing requirement in openspec/specs/<capability>/spec.md.
-
-      2. Copy the ENTIRE requirement block (from `### Requirement:` through all
-      scenarios).
-
-      3. Paste under `## MODIFIED Requirements` and edit it so the copied block
-      represents the full desired behaviour after the change.
-
-      4. Ensure header text matches exactly (whitespace-insensitive).
-
-
-      Common pitfall: Using MODIFIED with partial content loses detail at
-      archive time. If adding new concerns without changing existing behaviour,
-      use ADDED instead.
-
-
-      Use the spec template shape exactly. Each scenario must remain mergeable
-      by OpenSpec archive and precise enough to extract into feature files and
-      acceptance tests.
+      Before considering a spec complete, extract the Gherkin and lint it with
+      gherkin-lint, fixing every reported issue. Linting is the same for every
+      stack, so a spec that lints clean does so regardless of which runner the
+      project uses. See the acceptance-test-authoring skill for your stack's
+      extraction + lint commands and their required flags.
     requires:
       - proposal
   - id: design
@@ -153,7 +161,7 @@ artifacts:
       Include alternatives considered for each decision.
 
       - **Risks / Trade-offs**: Known limitations, things that could go wrong.
-      Format: [Risk] -> Mitigation
+      Format: [Risk] → Mitigation
 
       - **Migration Plan**: Steps to deploy, rollback strategy (if applicable)
 
@@ -170,95 +178,72 @@ artifacts:
       - proposal
   - id: tasks
     generates: tasks.md
-    description: Implementation checklist that starts from feature extraction and ends with passing acceptance tests
+    description: Implementation checklist with trackable tasks
     template: tasks.md
     instruction: >
       Create the task list that breaks down the implementation work.
 
 
-      Treat the template as a required gate contract. Preserve the section
-      order, commit checkpoints, and `- [ ]` checkbox format, then replace
-      placeholders with change-specific feature files, acceptance-test files,
-      Cucumber.js configuration, reports, attempt limits, and implementation
-      subsystems. The apply phase parses checkbox format to track progress.
+      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+
+      checkbox format to track progress. Tasks not using `- [ ]` won't be
+      tracked.
 
 
-      Checklist requirements:
+      Guidelines:
 
-      - Group related tasks under ## numbered headings.
+      - Group related tasks under ## numbered headings
 
-      - Each task MUST be a checkbox: `- [ ] X.Y Task description`.
+      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
 
-      - Tasks should be small enough to complete in one session.
+      - Tasks should be small enough to complete in one session
 
-      - Order tasks by dependency (what must be done first?).
+      - Order tasks by dependency (what must be done first?)
 
-      Required BDD gates:
 
-      - Extract or update root-level `features/*.feature` files from the
-        OpenSpec Markdown specs before writing acceptance-test code. Map
-        each capability to an existing `features/*.feature` file or a new
-        file; do not create a duplicate feature file. When updating an
-        existing file, merge semantically: preserve unrelated scenarios,
-        edit matching scenarios in place, add new scenarios for new
-        behaviour, and delete scenarios the spec delta explicitly removes.
-        When a scenario is deleted, remove the corresponding step
-        definitions, fixtures, and helpers from `acceptance-tests/` in
-        sync. Reject duplicate feature files or duplicate scenarios before
-        the extraction commit.
+      The template's first-time-setup section is written against whichever
 
-      - Configure a root-level `acceptance-tests/` Node project that uses
-        Cucumber.js, ignores `acceptance-tests/node_modules/` in git, defines
-        scripts for `gherkin-lint`, JavaScript linting, and acceptance runs,
-        and writes an HTML report for every acceptance run.
+      acceptance stack the project uses. Read `stack:` from
+      `openspec/config.yaml`
 
-      - Run `gherkin-lint` once from `acceptance-tests/` against the extracted
-        root feature files. Require zero lint errors before committing the
-        feature extraction gate.
+      (`javascript` or `python`) and substitute it wherever the template says
 
-      - Add step definitions, fixtures, helpers, and environment setup after
-        the feature gate commit. The failing acceptance gate MUST cover every
-        in-scope business scenario from the OpenSpec delta before any
-        application implementation begins. Run Cucumber.js with HTML report
-        output and confirm the suite fails for the intended unimplemented
-        application behaviour, not missing steps, bad configuration, feature
-        syntax, or test plumbing. Commit this failing acceptance gate before
-        implementing application code.
+      `<stack>`, inlining the concrete destination filenames from that stack's
 
-      - Start implementation only after the failing acceptance-test setup has
-        been committed. Implementation tasks MUST be granular and name each
-        affected subsystem, such as API handlers, domain services, persistence,
-        CLI/UI surfaces, adapters, configuration, docs, fixtures, and test
-        helpers when those subsystems are in scope. Structure implementation
-        as scenario slices: each slice identifies the business scenario or
-        scenario group it intends to turn green, then runs the full
-        Cucumber.js acceptance suite. All previously implemented scenarios
-        must remain green; the only acceptable red scenarios are those
-        listed as not-yet-implemented in the current task checklist for
-        that slice.
+      "Files to copy" table in the acceptance-test-authoring skill
 
-      - Before the acceptance-fix loop, ask how many attempts to allow; default
-        to 3 when no limit is provided. Expand the recorded limit into one
-        checkbox per attempt, labeled `Acceptance attempt X/<limit>`, with the
-        HTML report path. Run Cucumber.js until it passes or the recorded limit
-        is exhausted. After failed attempts, fix implementation code without
-        weakening committed feature files or acceptance tests. If an early
-        attempt passes, replace remaining unrun attempts with a completed "not
-        needed" checkpoint that records the passing attempt. If the last
-        allowed attempt fails, stop with an error saying there are still errors
-        and include the HTML report path.
+      (`references/<stack>/SETUP.md`). The authored tasks.md must name real
 
-      - Commit checkpoints are mandatory after feature extraction, after
-        failing acceptance-test setup, and after passing implementation. If a
-        required commit cannot be made, the task list MUST direct the
-        contributor to pause before crossing the gate.
+      filenames, not placeholders. If `stack:` is absent, task 1.1 records it
 
-      - If accepted behaviour is wrong, update the OpenSpec artifacts
-        deliberately and review the test change; never weaken committed
-        feature files or acceptance tests just to make implementation pass.
+      first — do not guess it.
 
-      - If implementation changes behaviour specs, include
-        `openspec validate <change> --type change --strict` before archive.
+
+      Example:
+
+      ```
+
+      ## 1. Setup
+
+
+      - [ ] 1.1 Create new module structure
+
+      - [ ] 1.2 Add dependencies to package.json
+
+
+      ## 2. Core Implementation
+
+
+      - [ ] 2.1 Implement data export function
+
+      - [ ] 2.2 Add CSV formatting utilities
+
+      ```
+
+
+      Reference specs for what needs to be built, design for how to build it.
+
+      Each task should be verifiable - you know when it's done.
     requires:
       - specs
       - design
@@ -267,28 +252,16 @@ apply:
     - tasks
   tracks: tasks.md
   instruction: |
-    Follow tasks.md in gate order and mark checkboxes complete as work finishes.
-    Enforce the feature-extraction, failing-acceptance, implementation, and
-    verification gates exactly as written. Stop before crossing any gate if its
-    lint, test, validation, or commit checkpoint fails.
-
-    Do not start acceptance-test code before the committed feature extraction
-    gate. Do not start application implementation before the committed failing
-    Cucumber.js acceptance gate. Implement in scenario slices as recorded in
-    tasks.md: each slice targets one business scenario or scenario group.
-    After each slice, run the full Cucumber.js acceptance suite. Only the
-    scenarios listed as not-yet-implemented in the current checklist may be
-    red; any regression in previously passing scenarios requires a fix before
-    proceeding. During implementation, use the attempt limit recorded in
-    tasks.md; if none is recorded, default to 3 and state that default before
-    running the loop. Each attempt must run Cucumber.js with HTML report
-    output. After a failed attempt, fix implementation code and retry until
-    the suite passes or the limit is exhausted. If the final allowed attempt
-    fails, stop with an error saying there are still errors and include the
-    HTML report path.
-
-    Treat features/ and acceptance-tests/ as off limits during ordinary
-    implementation. Step definitions, fixtures, helpers, or feature text are
-    not changed merely to make failing scenarios pass. Any necessary correction
-    to accepted behaviour requires updating the OpenSpec change artifacts
-    before modifying committed feature or acceptance-test files.
+    Read context files, work through pending tasks, mark complete as you go.
+    Pause if you hit blockers or need clarification.
+format:
+  extension: ".md"
+  fence:
+    open: '^```gherkin\s*$'
+    close: '^```\s*$'
+  # requirement, scenario and delta below match lines INSIDE ```gherkin fences:
+  requirement: '^\s*Rule:\s*(?<name>.+)$'
+  scenario: '^\s*Scenario:'
+  delta:
+    marker: '@openspec:\s*(?<op>ADDED|MODIFIED|REMOVED|RENAMED)'
+    rename: '@openspec:\s*RENAMED\s+from="(?<from>[^"]+)"\s+to="(?<to>[^"]+)"'
