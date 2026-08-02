@@ -77,7 +77,7 @@ The `intent-driven` schema SHALL expose the artifacts `proposal`, `specs`, `desi
 - **THEN** `specs` and `design` each require only `proposal` and may proceed in parallel
 - **AND** `adr` requires `design`, and `tasks` requires `specs` and `adr`, giving the flow `proposal -> (specs, design) -> adr -> tasks`.
 
-#### Scenario: Specs generate fenced-Gherkin Markdown by capability
+#### Scenario: Specs generate OpenSpec mergeable Markdown by capability
 - **GIVEN** a proposal lists new or modified capabilities
 - **WHEN** the `specs` artifact is created
 - **THEN** each listed capability is specified at `specs/<capability>/spec.md` (the artifact `generates` pattern is `specs/**/spec.md`)

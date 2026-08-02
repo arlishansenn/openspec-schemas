@@ -1,10 +1,14 @@
 # intent-driven-schema-workflow Specification
 
 ## Purpose
-TBD - created by archiving change add-intent-driven-schema. Update Purpose after archive.
+
+Define the packaged `intent-driven` schema as `behaviour-driven` plus durable
+Architecture Decision Records: executable fenced-Gherkin behaviour specs and
+acceptance-test enforcement, technical design constrained by in-force ADRs,
+and per-change ADR review before task planning.
 ## Requirements
 ### Requirement: Repository SHALL package the intent-driven schema
-The repository SHALL provide a reusable `intent-driven` OpenSpec schema package for teams that want proposal-led intent capture, Gherkin-style behaviour specs inside OpenSpec Markdown wrappers, technical design, durable architecture decision records, and implementation tasks.
+The repository SHALL provide a reusable `intent-driven` OpenSpec schema package for teams that want proposal-led intent capture, executable fenced-Gherkin behaviour specs, technical design, durable architecture decision records, and implementation tasks driven by an acceptance-test suite.
 
 #### Scenario: Self-contained intent-driven schema folder is available
 - **WHEN** the `intent-driven` schema is added
@@ -17,18 +21,19 @@ The repository SHALL provide a reusable `intent-driven` OpenSpec schema package 
 - **AND** it explains when the schema is suitable and unsuitable.
 
 ### Requirement: Intent-driven schema SHALL enforce proposal-to-tasks workflow with ADRs
-The `intent-driven` schema SHALL expose the artifacts `proposal`, `specs`, `design`, `adr`, and `tasks`, SHALL generate behaviour specs as OpenSpec Markdown delta files, and SHALL require those artifacts to be completed in dependency order before apply readiness.
+The `intent-driven` schema SHALL expose the artifacts `proposal`, `specs`, `design`, `adr`, and `tasks`, SHALL generate behaviour specs as Markdown files with fenced Gherkin at `specs/<capability>/spec.md`, and SHALL require those artifacts to be completed in dependency order before apply readiness.
 
 #### Scenario: Workflow proceeds in dependency order
 - **GIVEN** a project activates `schema: intent-driven`
 - **WHEN** a new OpenSpec change is created
-- **THEN** artifact creation proceeds in this order: `proposal -> specs -> design -> adr -> tasks`.
+- **THEN** `specs` and `design` each require only `proposal` and may proceed in parallel
+- **AND** `adr` requires `design`, and `tasks` requires `specs` and `adr`, giving the flow `proposal -> (specs, design) -> adr -> tasks`.
 
 #### Scenario: Specs generate OpenSpec mergeable Markdown by capability
 - **GIVEN** a proposal lists new or modified capabilities
 - **WHEN** the `specs` artifact is created
-- **THEN** each listed capability is specified at `specs/<capability>/spec.md`
-- **AND** each spec file uses OpenSpec delta headers so archive can merge it into `openspec/specs/<capability>/spec.md`.
+- **THEN** each listed capability is specified at `specs/<capability>/spec.md` (the artifact `generates` pattern is `specs/**/spec.md`)
+- **AND** each spec file expresses its delta with `# @openspec:` markers inside gherkin fences so the change can be merged into `openspec/specs/<capability>/spec.md`.
 
 #### Scenario: Tasks are required for apply readiness
 - **GIVEN** the schema defines apply readiness
@@ -39,22 +44,6 @@ The `intent-driven` schema SHALL expose the artifacts `proposal`, `specs`, `desi
 - **GIVEN** the schema defines task dependencies
 - **WHEN** `proposal`, `specs`, `design`, or `adr` is incomplete
 - **THEN** `tasks` remains blocked until all required predecessor artifacts are complete.
-
-### Requirement: Intent-driven schema SHALL guide Gherkin-style authoring inside Markdown wrappers
-The `intent-driven` schema SHALL make OpenSpec Markdown syntax the merge wrapper and SHALL guide contributors to write the requirement and scenario content in Gherkin style.
-
-#### Scenario: OpenSpec wrapper remains explicit
-- **WHEN** a contributor authors a behaviour spec
-- **THEN** the schema guidance requires OpenSpec delta headers such as `## ADDED Requirements` and `## MODIFIED Requirements`
-- **AND** requires requirement headers to use `### Requirement:`
-- **AND** requires scenarios to use `#### Scenario:` so default OpenSpec validation and archive can process the spec.
-
-#### Scenario: Scenario content uses Gherkin-style steps
-- **WHEN** a contributor authors a behaviour spec
-- **THEN** the schema guidance treats each requirement as the feature or business rule being specified
-- **AND** requires scenarios to use `GIVEN`, `WHEN`, and `THEN` steps inside the Markdown scenario block
-- **AND** allows `AND` and `BUT` for follow-on steps
-- **AND** directs `Then` steps to express observable outcomes rather than implementation details.
 
 ### Requirement: Intent-driven schema SHALL persist durable decisions with per-change ADR review
 The `intent-driven` schema SHALL require each change to complete ADR review through a change-local manifest at `openspec/changes/<change>/adr.md`, while preserving durable architectural decisions as immutable ADR files under the target repository's top-level `adr/` folder when a change introduces decisions worth carrying forward.
@@ -116,3 +105,55 @@ Changes adding or modifying `openspec/schemas/intent-driven/` SHALL pass OpenSpe
 #### Scenario: Schema validation passes
 - **WHEN** implementation changes files under `openspec/schemas/intent-driven/`
 - **THEN** `openspec schema validate intent-driven` passes before the change is considered complete.
+
+### Requirement: Intent-driven specs SHALL use fenced Gherkin with delta markers
+The `intent-driven` schema SHALL adopt the same fenced-Gherkin spec format as `behaviour-driven`: executable content exclusively in column-0 ` ```gherkin ` fences (`Feature:` = capability, `Rule:` = requirement with a SHALL/MUST description, `Scenario:` = Given/When/Then example, every `Rule:` with at least one `Scenario:`), delta operations as `# @openspec:` marker comments inside the fences, gherkin-lint before spec completion, and a `format:` block in `schema.yaml` byte-identical to the `behaviour-driven` schema's.
+
+Affected schema:
+- `intent-driven` (`openspec/schemas/intent-driven/`)
+
+#### Scenario: Spec files follow the shared fence contract
+- **WHEN** a contributor authors a spec under `specs/<capability>/spec.md`
+- **THEN** schema guidance applies the same fence contract as `behaviour-driven`: prose anywhere, only column-0 ` ```gherkin ` fences executable, at least one fence per file, all fences concatenating into exactly one `Feature:`, indented openers a hard error
+- **AND** delta operations use `# @openspec: ADDED|MODIFIED|REMOVED|RENAMED` markers placed immediately above the `Rule:` they apply to
+- **AND** MODIFIED entries copy the entire existing `Rule:` block before editing
+- **AND** the spec is extracted and linted with gherkin-lint before the artifact is considered complete.
+
+#### Scenario: Format blocks stay in sync across the two schemas
+- **WHEN** tooling reads `openspec/schemas/intent-driven/schema.yaml`
+- **THEN** its `format:` block is byte-identical to the `behaviour-driven` schema's `format:` block.
+
+### Requirement: Intent-driven tasks SHALL scaffold a stack-agnostic acceptance suite honouring ADRs
+The `intent-driven` schema SHALL generate tasks from the same three-section stack-driven template as `behaviour-driven` (first-time acceptance-suite setup keyed on `stack:` in `openspec/config.yaml`, one red→green→commit task per pending step definition, completion with a fully green suite), and SHALL additionally direct implementation to honour currently in-force ADRs under `<repo>/adr/`.
+
+Affected schema:
+- `intent-driven` (`openspec/schemas/intent-driven/`)
+
+#### Scenario: Tasks follow the stack-driven acceptance template
+- **GIVEN** `specs` and `adr` artifacts are complete
+- **WHEN** `tasks.md` is generated
+- **THEN** the generator reads `stack:` from `openspec/config.yaml` (`javascript` or `python`), substitutes `<stack>` in the template, and inlines the concrete destination filenames from the acceptance-test-authoring skill's `references/<stack>/SETUP.md`
+- **AND** if `stack:` is absent, the first setup task records it before any scaffolding
+- **AND** the first-time setup section is skipped when `acceptance-tests/` already exists
+- **AND** implementation tasks proceed one pending step definition at a time with a red→green→commit cadence
+- **AND** completion requires the full suite green with zero pending or undefined steps and an HTML report.
+
+#### Scenario: Implementation honours in-force ADRs
+- **WHEN** `tasks.md` is generated
+- **THEN** task guidance references specs for what to build, design for how to build it, and `<repo>/adr/` for durable architectural commitments to honour.
+
+### Requirement: Intent-driven README SHALL document the acceptance-enforced workflow
+The `intent-driven` README MUST position the schema as `behaviour-driven` plus durable ADRs and document the fenced-Gherkin format, acceptance enforcement, supported stacks, and activation including the `stack:` key.
+
+Affected schema:
+- `intent-driven` (`openspec/schemas/intent-driven/`)
+
+#### Scenario: README documents format, enforcement, and fit
+- **WHEN** a contributor reads `openspec/schemas/intent-driven/README.md`
+- **THEN** it describes the schema as `behaviour-driven` plus per-change ADR review and durable ADR records
+- **AND** it documents the fenced-Gherkin spec format with an example and states that Gherkin is extracted to `.feature` files at test time and linted with gherkin-lint
+- **AND** it documents the two rules and the supported stacks (`javascript` via cucumber-js, `python` via behave)
+- **AND** it shows the artifact flow `proposal -> (specs, design) -> adr -> tasks`
+- **AND** activation guidance covers `schema: intent-driven` and `stack: javascript` or `stack: python`
+- **AND** it no longer claims that `.feature` files must not be created or that Gherkin linting is outside the schema.
+

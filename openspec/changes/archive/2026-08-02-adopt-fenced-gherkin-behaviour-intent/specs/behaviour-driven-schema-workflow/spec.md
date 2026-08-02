@@ -109,7 +109,7 @@ The `behaviour-driven` schema SHALL expose the artifacts `proposal`, `specs`, `d
 - **THEN** `specs` and `design` each require only `proposal` and may proceed in parallel
 - **AND** `tasks` requires both `specs` and `design`, giving the flow `proposal -> (specs, design) -> tasks`.
 
-#### Scenario: Specs generate fenced-Gherkin Markdown by capability
+#### Scenario: Specs generate OpenSpec mergeable Markdown by capability
 - **GIVEN** a proposal lists new or modified capabilities
 - **WHEN** the `specs` artifact is created
 - **THEN** each listed capability is specified at `specs/<capability>/spec.md` (the artifact `generates` pattern is `specs/**/spec.md`)
