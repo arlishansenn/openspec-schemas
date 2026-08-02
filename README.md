@@ -26,6 +26,8 @@ Read this file: https://raw.githubusercontent.com/intent-driven-dev/openspec-sch
 
 Otherwise the guide will enumerate all available schemas and ask you to pick one.
 
+Schemas declare their companion skills in a `skills.txt` manifest inside the schema directory. The install guide's Step 6 installs those skills from [intent-driven-dev/skills](https://github.com/intent-driven-dev/skills) into your project's `.agents/skills/`, so installing a schema also brings in the skills it works best with.
+
 ### Example: intent-driven `config.yaml`
 
 ```yaml
