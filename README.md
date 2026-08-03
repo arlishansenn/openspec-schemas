@@ -17,15 +17,15 @@ For most projects, the built-in `spec-driven` schema is all you need. For comple
 | Schema | Artifact flow | Choose when |
 |--------|---------------|-------------|
 | `spec-driven` (built-in) | `proposal -> specs -> design -> tasks` | Default for most projects; ships with OpenSpec |
-| `minimalist` | `specs -> tasks` | Small, well-scoped, low-risk changes |
-| `behaviour-driven` | `proposal -> (specs, design) -> tasks` | You want executable BDD: Gherkin in fenced blocks inside `spec.md` runs as the acceptance suite (cucumber-js or behave) |
+| `behaviour-driven` | `proposal -> (specs, design) -> tasks` | Gherkin in fenced blocks inside `spec.md` carries the behavioural intent, and cucumber-js or behave runs it against the implementation |
 | `spec-driven-with-adr` | `proposal -> specs / design -> adr -> tasks` | You need durable Architecture Decision Records on top of spec-driven |
-| `intent-driven` | `proposal -> (specs, design) -> adr -> tasks` | `behaviour-driven` plus durable ADRs: executable behaviour specs, design, and long-lived decisions |
+| `intent-driven` | `proposal -> (specs, design) -> adr -> tasks` | `behaviour-driven` plus durable ADRs: behaviour specs verified against the implementation, design, and long-lived decisions |
 | `event-driven` | `event-storming -> event-modeling -> specs -> design -> asyncapi -> tasks` | Event-Driven Architecture Systems |
+| `minimalist` | `specs -> tasks` | Small, well-scoped, low-risk changes |
 
-How the schemas relate: `intent-driven` is `behaviour-driven` plus a durable ADR artifact — the same fenced-Gherkin specs and the same executable acceptance-test enforcement, adding per-change ADR review and repository-level decision records. It still subsumes `spec-driven-with-adr` (same ADR handling, richer specs, larger companion skill set). Choose `behaviour-driven` when you don't need durable ADRs. `event-driven` is domain-specific for event-centric/AsyncAPI-first systems, and `minimalist` is for small, low-risk changes.
+How the schemas relate: `intent-driven` is `behaviour-driven` plus a durable ADR artifact — the same fenced-Gherkin specs verified by the same acceptance suite, adding per-change ADR review and repository-level decision records. It still subsumes `spec-driven-with-adr` (same ADR handling, richer specs, larger companion skill set). Choose `behaviour-driven` when you don't need durable ADRs. `event-driven` is domain-specific for event-centric/AsyncAPI-first systems, and `minimalist` is for small, low-risk changes.
 
-To try `intent-driven` without installing anything, start from the [intent-driven-template](https://github.com/intent-driven-dev/intent-driven-template) — a starter project with the schema, OpenSpec config, commands, and companion skills already installed.
+To try these schemas without installing anything, start from a template repo — [intent-driven-template](https://github.com/intent-driven-dev/intent-driven-template) or [behaviour-driven-template](https://github.com/intent-driven-dev/behaviour-driven-template) — each a starter project with the schema, OpenSpec config, commands, and companion skills already installed.
 
 ## Install a Schema
 
@@ -69,54 +69,6 @@ For the full step-by-step install flow, see [`AGENT_INSTALL.md`](./AGENT_INSTALL
 
 ## Custom Schemas
 
-### Minimalist
-
-Fast path from spec to execution using user-story requirements and Gherkin acceptance-criteria style. Lightweight schema for well-scoped, low-risk changes.
-
-Artifact order:
-
-```text
-specs -> tasks
-```
-
-Activation:
-
-```yaml
-schema: minimalist
-```
-
-Validate:
-
-```bash
-openspec schema validate minimalist
-```
-
-For more details, see `openspec/schemas/minimalist/README.md`.
-
-### Event-Driven
-
-Structured workflow for event-centric systems with [Event Storming](https://en.wikipedia.org/wiki/Event_storming) discovery followed by [AsyncAPI](https://www.asyncapi.com/) specification.
-
-Artifact order:
-
-```text
-event-storming -> event-modeling -> specs -> design -> asyncapi -> tasks
-```
-
-Activation:
-
-```yaml
-schema: event-driven
-```
-
-Validate:
-
-```bash
-openspec schema validate event-driven
-```
-
-For more details, see `openspec/schemas/event-driven/README.md`.
-
 ### Behaviour-Driven
 
 Spec-as-source BDD workflow: business use cases are Gherkin scenarios inside
@@ -124,6 +76,11 @@ fenced ` ```gherkin ` blocks in `spec.md`, and those scenarios run as the
 acceptance suite every change must keep green (cucumber-js or behave, selected
 by `stack:` in `config.yaml`). Two rules govern the workflow: acceptance tests
 always pass, and specs and code are never modified together.
+
+To try it without installing anything, start from the
+[behaviour-driven-template](https://github.com/intent-driven-dev/behaviour-driven-template) —
+a starter project with the schema, OpenSpec config, commands, and companion
+skills already installed.
 
 Artifact order:
 
@@ -150,7 +107,7 @@ For more details, see `openspec/schemas/behaviour-driven/README.md`.
 Experimental proposal-to-tasks workflow for changes that also need durable
 Architecture Decision Records persisted under the target repository's top-level
 `adr/` folder. `intent-driven` shares this schema's ADR handling and adds
-fenced-Gherkin specs with executable acceptance-test enforcement plus a larger
+fenced-Gherkin specs verified by an acceptance suite plus a larger
 skill set — prefer it unless you want plain spec-driven specs with ADRs and
 nothing more.
 
@@ -177,10 +134,10 @@ For more details, see `openspec/schemas/spec-driven-with-adr/README.md`.
 ### Intent-Driven
 
 `behaviour-driven` plus durable Architecture Decision Records: behaviour is
-written as executable Gherkin scenarios inside fenced blocks in `spec.md` and
-runs as the acceptance suite (cucumber-js or behave), technical design is
-constrained by in-force ADRs, and each change completes an ADR review before
-task planning.
+written as Gherkin scenarios inside fenced blocks in `spec.md`, and the
+acceptance suite (cucumber-js or behave) runs them against the implementation,
+technical design is constrained by in-force ADRs, and each change completes an
+ADR review before task planning.
 
 To try it without installing anything, start from the
 [intent-driven-template](https://github.com/intent-driven-dev/intent-driven-template) —
@@ -207,6 +164,54 @@ openspec schema validate intent-driven
 ```
 
 For more details, see `openspec/schemas/intent-driven/README.md`.
+
+### Event-Driven
+
+Structured workflow for event-centric systems with [Event Storming](https://en.wikipedia.org/wiki/Event_storming) discovery followed by [AsyncAPI](https://www.asyncapi.com/) specification.
+
+Artifact order:
+
+```text
+event-storming -> event-modeling -> specs -> design -> asyncapi -> tasks
+```
+
+Activation:
+
+```yaml
+schema: event-driven
+```
+
+Validate:
+
+```bash
+openspec schema validate event-driven
+```
+
+For more details, see `openspec/schemas/event-driven/README.md`.
+
+### Minimalist
+
+Fast path from spec to execution using user-story requirements and Gherkin acceptance-criteria style. Lightweight schema for well-scoped, low-risk changes.
+
+Artifact order:
+
+```text
+specs -> tasks
+```
+
+Activation:
+
+```yaml
+schema: minimalist
+```
+
+Validate:
+
+```bash
+openspec schema validate minimalist
+```
+
+For more details, see `openspec/schemas/minimalist/README.md`.
 
 ## Contributing
 
