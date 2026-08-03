@@ -63,20 +63,12 @@ scaffold the acceptance suite (once per project), then work one pending step
 definition at a time — fails for the right reason → implement → passes →
 commit — until the full suite is green with zero pending or undefined steps.
 
-## Supported Stacks
+## Acceptance Stacks
 
-The acceptance suite is stack-agnostic, selected by `stack:` in
-`openspec/config.yaml`:
-
-| `stack:` | Runner | Report |
-|---|---|---|
-| `javascript` | cucumber-js | `acceptance-tests/reports/cucumber-report.html` |
-| `python` | behave (1.2.7+, for Gherkin v6 `Rule:` support) | `acceptance-tests/reports/behave-report.html` |
-
-Spec linting is shared: `gherkin-lint` over the extracted output, with one
-pinned config for both, so the two stacks accept and reject exactly the same
-specs. The extraction, effective-spec composition, and runner contract are
-defined by the `acceptance-test-authoring` skill.
+The acceptance suite — extraction, runners, reports, and linting — is defined
+by the [`acceptance-test-authoring`](https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/acceptance-test-authoring)
+skill, which requires a `stack:` key in `openspec/config.yaml`. Read the
+skill's documentation for the supported stacks and setup details.
 
 ## Activate
 

@@ -96,12 +96,10 @@ The workflow is governed by the same two rules as `behaviour-driven`:
    either `openspec/` or application code, never both (`tasks.md` exempt), per
    the `bdd-zone-check` skill.
 
-Supported stacks, selected by `stack:` in `openspec/config.yaml`:
-
-| `stack:` | Runner | Report |
-|---|---|---|
-| `javascript` | cucumber-js | `acceptance-tests/reports/cucumber-report.html` |
-| `python` | behave (1.2.7+) | `acceptance-tests/reports/behave-report.html` |
+The acceptance suite — extraction, runners, reports, and linting — is defined
+by the [`acceptance-test-authoring`](https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/acceptance-test-authoring)
+skill, which requires a `stack:` key in `openspec/config.yaml`. Read the
+skill's documentation for the supported stacks and setup details.
 
 ## ADR Persistence
 

@@ -61,8 +61,6 @@ Also update the `rules` keys to match the artifact IDs in the schema's `schema.y
 - `intent-driven` uses `proposal`, `specs`, `design`, `adr`, and `tasks` → set those as `rules` keys
 - Check `openspec/schemas/<schema-name>/schema.yaml` (`artifacts[].id`) for the exact IDs of your chosen schema
 
-Some schemas require additional `config.yaml` keys — check the schema's README (e.g. `behaviour-driven` and `intent-driven` require `stack: javascript` or `stack: python` for their acceptance-test suite).
-
 ## Step 5 — Validate
 
 Run:
