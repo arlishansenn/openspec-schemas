@@ -1,14 +1,5 @@
-# behaviour-driven-schema-workflow Specification
+## MODIFIED Requirements
 
-## Purpose
-
-Define the packaged `behaviour-driven` schema as a proposal-led workflow whose
-observable behaviour is captured as OpenSpec Markdown delta specs with
-Gherkin-style GIVEN/WHEN/THEN scenarios. Executing those scenarios as an
-acceptance suite, and the specs/code zone-isolation discipline that governs it,
-are not part of the schema; they are provided by the opt-in `spec-as-source`
-companion skill the schema declares.
-## Requirements
 ### Requirement: Repository SHALL package the behaviour-driven schema
 The repository SHALL provide a reusable `behaviour-driven` OpenSpec schema package for teams that want proposal-led changes with observable behaviour captured as Gherkin-style scenarios inside OpenSpec-mergeable Markdown specs. The executable-acceptance workflow is not part of the schema; it is provided by the `spec-as-source` companion skill that the schema declares.
 
@@ -69,6 +60,30 @@ Affected schema:
 - **WHEN** a behaviour-driven schema change also updates OpenSpec change artifacts
 - **THEN** the verification plan includes `openspec validate <change-name> --type change --strict`
 - **AND** the change is not complete until that validation passes.
+
+## REMOVED Requirements
+
+### Requirement: Behaviour-driven specs SHALL use fenced Gherkin with delta markers
+**Reason**: The fenced-Gherkin spec format and its `format:` block move out of the schema, matching the separation `intent-driven-template` applied to `intent-driven`. Fenced-Gherkin authoring is now owned by the opt-in `spec-as-source` skill, which nests Gherkin fences inside standard OpenSpec headings and therefore needs no schema-level `format:` block.
+
+**Migration**: Projects that author fenced-Gherkin specs install the `spec-as-source` skill from https://github.com/intent-driven-dev/skills and draft `spec.md` from its `references/spec.md` instead of the schema template. Projects that do not adopt the skill use the schema's OpenSpec Markdown delta format.
+
+### Requirement: Behaviour-driven tasks SHALL scaffold a stack-agnostic acceptance suite
+**Reason**: Acceptance-suite scaffolding is owned by the `spec-as-source` and `acceptance-test-authoring` skills, not the schema. The schema's task template becomes generic and no longer depends on a `stack:` key in `openspec/config.yaml`.
+
+**Migration**: Projects that want acceptance-first task ordering install the `spec-as-source` skill and draft `tasks.md` from its `references/tasks.md`, which retains the first-time-setup, one-task-per-pending-step, and completion sections keyed on `stack:`.
+
+### Requirement: Behaviour-driven workflow SHALL follow spec-first and zone-isolation rules
+**Reason**: The two rules and the specs/code zone isolation they govern are defined by the `spec-as-source` skill, which absorbed the retired `bdd-zone-check` skill. Stating them as schema requirements duplicates the skill and drifts from it.
+
+**Migration**: Projects that want spec-first discipline and zone isolation install the `spec-as-source` skill, whose "BDD Zone Rules" section is the single source of truth for both rules.
+
+### Requirement: Behaviour-driven README SHALL document the fenced-Gherkin workflow
+**Reason**: The README no longer documents the fenced-Gherkin format, the two rules, the `format:` block, or the `stack:` key as schema properties, because all four moved to the `spec-as-source` skill.
+
+**Migration**: Replaced by "Behaviour-driven README SHALL document the workflow and its companion skills" below.
+
+## ADDED Requirements
 
 ### Requirement: Behaviour-driven specs SHALL use OpenSpec Markdown delta headers
 The `behaviour-driven` schema SHALL define specs as OpenSpec Markdown delta files that archive can merge, using `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, and `## RENAMED Requirements` section headers, `### Requirement: <name>` for each requirement with a SHALL/MUST description, and `#### Scenario: <name>` with GIVEN/WHEN/THEN steps for each scenario. The schema SHALL NOT declare a `format:` block, and SHALL NOT embed fenced-Gherkin extraction or linting rules.

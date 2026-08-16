@@ -1,14 +1,5 @@
-# intent-driven-schema-workflow Specification
+## MODIFIED Requirements
 
-## Purpose
-
-Define the packaged `intent-driven` schema as `behaviour-driven` plus durable
-Architecture Decision Records: behaviour captured as OpenSpec Markdown delta
-specs with Gherkin-style GIVEN/WHEN/THEN scenarios, technical design
-constrained by in-force ADRs, and per-change ADR review before task planning.
-Executable acceptance testing is not part of the schema; it is provided by the
-opt-in `spec-as-source` companion skill the schema declares.
-## Requirements
 ### Requirement: Repository SHALL package the intent-driven schema
 The repository SHALL provide a reusable `intent-driven` OpenSpec schema package for teams that want proposal-led intent capture, behaviour specs as OpenSpec Markdown deltas, technical design, durable architecture decision records, and implementation tasks. The executable-acceptance workflow is not part of the schema; it is provided by the `spec-as-source` companion skill that the schema declares.
 
@@ -60,66 +51,24 @@ Affected schema:
 - **THEN** the artifact flow shown in the README matches the `requires:` declarations in `schema.yaml`
 - **AND** the README does not describe `specs` and `design` as sequential.
 
-### Requirement: Intent-driven schema SHALL persist durable decisions with per-change ADR review
-The `intent-driven` schema SHALL require each change to complete ADR review through a change-local manifest at `openspec/changes/<change>/adr.md`, while preserving durable architectural decisions as immutable ADR files under the target repository's top-level `adr/` folder when a change introduces decisions worth carrying forward.
+## REMOVED Requirements
 
-#### Scenario: ADR artifact uses a change-local completion marker
-- **GIVEN** the affected schema is `intent-driven`
-- **WHEN** `openspec/schemas/intent-driven/schema.yaml` defines the `adr` artifact
-- **THEN** the artifact `generates` value MUST be `adr.md`
-- **AND** the artifact completion check MUST be scoped to `openspec/changes/<change>/adr.md`
-- **AND** existing files under the repository-level `adr/` folder MUST NOT satisfy completion for a new change.
+### Requirement: Intent-driven specs SHALL use fenced Gherkin with delta markers
+**Reason**: The spec format moves out of the schema. `intent-driven-template` now packages `intent-driven` as vanilla OpenSpec and delegates fenced-Gherkin authoring to the opt-in `spec-as-source` skill, which nests Gherkin fences inside standard OpenSpec headings and therefore needs no schema-level `format:` block.
 
-#### Scenario: ADR artifact records durable ADR manifest entries
-- **GIVEN** the affected schema is `intent-driven`
-- **WHEN** the `adr` artifact is created
-- **THEN** the change-local `adr.md` artifact MUST act as a concise manifest, not a duplicate full ADR
-- **AND** it MUST state that ADR review was completed for the change
-- **AND** it MUST list existing in-force ADRs reviewed for the change
-- **AND** if the change introduces any new durable architectural decision, a corresponding repository-level ADR file MUST be created under `<repo>/adr/`
-- **AND** the change-local `adr.md` artifact MUST reference every repository-level ADR file created for the change
-- **AND** it MUST NOT duplicate the full context, decision, or consequences content from any repository-level ADR file
-- **AND** when no new repository-level ADR is needed, it MUST explicitly state that no major durable architectural decisions were introduced.
+**Migration**: Projects that author fenced-Gherkin specs install the `spec-as-source` skill from https://github.com/intent-driven-dev/skills and draft `spec.md` from its `references/spec.md` instead of the schema template. Projects that do not adopt the skill use the schema's OpenSpec Markdown delta format.
 
-#### Scenario: ADR artifact preserves repository-level decision history
-- **GIVEN** a project activates `schema: intent-driven`
-- **WHEN** the `adr` artifact identifies a durable architectural decision that is not already captured by an in-force ADR
-- **THEN** the schema instructions MUST direct ADR files to `<repo>/adr/NNNN-kebab-title.md`
-- **AND** `<repo>/adr/` MUST mean a top-level folder beside `openspec/`, not a folder inside `openspec/`
-- **AND** accepted ADR immutability and supersession rules MUST remain intact.
+### Requirement: Intent-driven tasks SHALL scaffold a stack-agnostic acceptance suite honouring ADRs
+**Reason**: Acceptance-suite scaffolding is owned by the `spec-as-source` and `acceptance-test-authoring` skills, not the schema. The schema's task template returns to the template project's generic task-group form, so the schema no longer depends on a `stack:` key.
 
-#### Scenario: Existing ADRs are context, not completion
-- **GIVEN** a project uses the `intent-driven` schema
-- **AND** the repository-level `adr/` folder already contains one or more ADR markdown files from previous changes
-- **WHEN** a new change has no `openspec/changes/<change>/adr.md`
-- **THEN** the `adr` artifact MUST NOT be considered complete
-- **AND** downstream task readiness MUST remain blocked until the change-local ADR review artifact exists.
+**Migration**: Projects that want acceptance-first task ordering install the `spec-as-source` skill and draft `tasks.md` from its `references/tasks.md`, which retains the first-time-setup, one-task-per-pending-step, and completion sections keyed on `stack:`.
 
-#### Scenario: Design reads currently in-force ADRs
-- **GIVEN** a project has existing ADR files under `<repo>/adr/`
-- **WHEN** the `design` artifact is created
-- **THEN** the schema instructions require the contributor to identify currently in-force ADRs by walking supersession links
-- **AND** only currently in-force ADRs constrain the design.
+### Requirement: Intent-driven README SHALL document the acceptance-enforced workflow
+**Reason**: The README no longer documents acceptance enforcement or the `stack:` key as schema properties, because both moved to the `spec-as-source` skill.
 
-### Requirement: Intent-driven schema documentation SHALL explain ADR review and persistence
-The `intent-driven` schema documentation SHALL distinguish the per-change ADR review artifact from durable repository-level ADR files.
+**Migration**: Replaced by "Intent-driven README SHALL document the workflow and its companion skills" below.
 
-#### Scenario: ADR review manifest is documented
-- **WHEN** a contributor reads `openspec/schemas/intent-driven/README.md`
-- **THEN** it explains that `openspec/changes/<change>/adr.md` is the per-change ADR review manifest used for OpenSpec artifact completion
-- **AND** it explains that existing repository-level ADR files are context for new changes, not completion evidence for those changes.
-
-#### Scenario: ADR persistence remains documented
-- **WHEN** a contributor reads `openspec/schemas/intent-driven/README.md`
-- **THEN** it explains that durable ADR files are generated under the target repository's top-level `adr/` folder
-- **AND** it explains that repository-level ADR files are created only when the change introduces a major durable architectural decision.
-
-### Requirement: Intent-driven schema SHALL validate cleanly
-Changes adding or modifying `openspec/schemas/intent-driven/` SHALL pass OpenSpec schema validation before completion.
-
-#### Scenario: Schema validation passes
-- **WHEN** implementation changes files under `openspec/schemas/intent-driven/`
-- **THEN** `openspec schema validate intent-driven` passes before the change is considered complete.
+## ADDED Requirements
 
 ### Requirement: Intent-driven specs SHALL use OpenSpec Markdown delta headers
 The `intent-driven` schema SHALL define specs as OpenSpec Markdown delta files that archive can merge, using `## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, and `## RENAMED Requirements` section headers, `### Requirement: <name>` for each requirement with a SHALL/MUST description, and `#### Scenario: <name>` with GIVEN/WHEN/THEN steps for each scenario. The schema SHALL NOT declare a `format:` block, and SHALL NOT embed fenced-Gherkin extraction or linting rules.

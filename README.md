@@ -17,13 +17,15 @@ For most projects, the built-in `spec-driven` schema is all you need. For comple
 | Schema | Artifact flow | Choose when |
 |--------|---------------|-------------|
 | `spec-driven` (built-in) | `proposal -> specs -> design -> tasks` | Default for most projects; ships with OpenSpec |
-| `behaviour-driven` | `proposal -> (specs, design) -> tasks` | Gherkin in fenced blocks inside `spec.md` carries the behavioural intent, and cucumber-js or behave runs it against the implementation |
+| `behaviour-driven` | `proposal -> (specs, design) -> tasks` | Observable behaviour carries the intent, written as Gherkin-style `GIVEN`/`WHEN`/`THEN` scenarios in OpenSpec Markdown delta specs |
 | `spec-driven-with-adr` | `proposal -> specs / design -> adr -> tasks` | You need durable Architecture Decision Records on top of spec-driven |
-| `intent-driven` | `proposal -> (specs, design) -> adr -> tasks` | `behaviour-driven` plus durable ADRs: behaviour specs verified against the implementation, design, and long-lived decisions |
+| `intent-driven` | `proposal -> (specs, design) -> adr -> tasks` | `behaviour-driven` plus durable ADRs: behaviour specs, design, and long-lived decisions |
 | `event-driven` | `event-storming -> event-modeling -> specs -> design -> asyncapi -> tasks` | Event-Driven Architecture Systems |
 | `minimalist` | `specs -> tasks` | Small, well-scoped, low-risk changes |
 
-How the schemas relate: `intent-driven` is `behaviour-driven` plus a durable ADR artifact — the same fenced-Gherkin specs verified by the same acceptance suite, adding per-change ADR review and repository-level decision records. It still subsumes `spec-driven-with-adr` (same ADR handling, richer specs, larger companion skill set). Choose `behaviour-driven` when you don't need durable ADRs. `event-driven` is domain-specific for event-centric/AsyncAPI-first systems, and `minimalist` is for small, low-risk changes.
+How the schemas relate: `intent-driven` is `behaviour-driven` plus a durable ADR artifact — the same OpenSpec Markdown delta specs, adding per-change ADR review and repository-level decision records. It still subsumes `spec-driven-with-adr` (same ADR handling, richer specs, larger companion skill set). Choose `behaviour-driven` when you don't need durable ADRs. `event-driven` is domain-specific for event-centric/AsyncAPI-first systems, and `minimalist` is for small, low-risk changes.
+
+Executable acceptance testing is not a schema feature. `behaviour-driven` and `intent-driven` both declare the opt-in [`spec-as-source`](https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/spec-as-source) skill, which makes `spec.md` the executable source of truth — fenced-Gherkin authoring, acceptance-first task ordering, and specs/code zone isolation — and pulls in `acceptance-test-authoring` for the runner, extraction, linting, and reports. Install the skill when you want specs run as tests; use either schema alone for the artifact discipline without the test harness.
 
 To try these schemas without installing anything, start from a template repo — [intent-driven-template](https://github.com/intent-driven-dev/intent-driven-template) or [behaviour-driven-template](https://github.com/intent-driven-dev/behaviour-driven-template) — each a starter project with the schema, OpenSpec config, commands, and companion skills already installed.
 
@@ -49,7 +51,6 @@ Schemas declare their companion skills in a `skills.txt` manifest inside the sch
 
 ```yaml
 schema: intent-driven
-stack: javascript # javascript | python
 
 context: |
   Tech Stack:
@@ -71,11 +72,13 @@ For the full step-by-step install flow, see [`AGENT_INSTALL.md`](./AGENT_INSTALL
 
 ### Behaviour-Driven
 
-Spec-as-source BDD workflow: business use cases are Gherkin scenarios inside
-fenced ` ```gherkin ` blocks in `spec.md`, and those scenarios run as the
-acceptance suite every change must keep green (cucumber-js or behave, selected
-by `stack:` in `config.yaml`). Two rules govern the workflow: acceptance tests
-always pass, and specs and code are never modified together.
+Proposal-to-tasks workflow for changes where observable behaviour carries the
+intent. Specs are OpenSpec Markdown deltas whose requirements and scenarios are
+written in Gherkin style with `GIVEN`/`WHEN`/`THEN` steps, so archive can merge
+them. To run those scenarios as an acceptance suite, add the schema's opt-in
+[`spec-as-source`](https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/spec-as-source)
+skill, which owns fenced-Gherkin authoring, acceptance-first task ordering, and
+the two spec-first rules.
 
 To try it without installing anything, start from the
 [behaviour-driven-template](https://github.com/intent-driven-dev/behaviour-driven-template) —
@@ -107,9 +110,8 @@ For more details, see `openspec/schemas/behaviour-driven/README.md`.
 Experimental proposal-to-tasks workflow for changes that also need durable
 Architecture Decision Records persisted under the target repository's top-level
 `adr/` folder. `intent-driven` shares this schema's ADR handling and adds
-fenced-Gherkin specs verified by an acceptance suite plus a larger
-skill set — prefer it unless you want plain spec-driven specs with ADRs and
-nothing more.
+behaviour-focused specs plus a larger skill set — prefer it unless you want
+plain spec-driven specs with ADRs and nothing more.
 
 Artifact order:
 
@@ -134,10 +136,11 @@ For more details, see `openspec/schemas/spec-driven-with-adr/README.md`.
 ### Intent-Driven
 
 `behaviour-driven` plus durable Architecture Decision Records: behaviour is
-written as Gherkin scenarios inside fenced blocks in `spec.md`, and the
-acceptance suite (cucumber-js or behave) runs them against the implementation,
-technical design is constrained by in-force ADRs, and each change completes an
-ADR review before task planning.
+written as Gherkin-style scenarios in OpenSpec Markdown delta specs, technical
+design is constrained by in-force ADRs, and each change completes an ADR review
+before task planning. Executable acceptance testing comes from the same opt-in
+[`spec-as-source`](https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/spec-as-source)
+skill that `behaviour-driven` declares.
 
 To try it without installing anything, start from the
 [intent-driven-template](https://github.com/intent-driven-dev/intent-driven-template) —

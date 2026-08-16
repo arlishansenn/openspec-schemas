@@ -1,20 +1,4 @@
-## Purpose
-
-Define packaging and documentation conventions for reusable, project-local OpenSpec schemas.
-## Requirements
-### Requirement: Repository SHALL package each custom schema in a self-contained folder
-The repository SHALL organize custom OpenSpec schemas as one folder per schema, where each folder contains all files required for a user or coding agent to install that schema into a target project, and SHALL only retain schema folders that are backed by an OpenSpec change history and canonical spec coverage.
-
-#### Scenario: Installable schema folder exists
-- **WHEN** a user selects a schema from this repository
-- **THEN** that schema is available as a single folder that can be copied into `openspec/schemas/<schema-name>/` in the target project
-
-#### Scenario: Unproposed schema packages are removed before rebuild
-- **GIVEN** a schema folder exists under `openspec/schemas/`
-- **AND** the schema lacks proposal-backed canonical spec coverage under `openspec/specs/`
-- **WHEN** maintainers decide to rebuild that schema through OpenSpec proposals
-- **THEN** the unproposed schema folder is removed before the proposal-backed replacement is added
-- **AND** repository catalog documentation no longer advertises that schema until the replacement is archived.
+## MODIFIED Requirements
 
 ### Requirement: Each schema SHALL declare companion skills in a manifest
 Each schema folder SHALL contain a `skills.txt` manifest listing its companion skills, one skill name per line and nothing else, where every listed name exactly matches a directory under `.agents/skills/` in https://github.com/intent-driven-dev/skills. Because the manifest lives inside the schema folder, copying the schema carries the manifest into the target project.
@@ -40,27 +24,6 @@ Affected schemas:
 - **WHEN** a user inspects any `skills.txt` under `openspec/schemas/`
 - **THEN** no manifest lists `bdd-zone-check`
 - **AND** the schemas that previously listed it list `spec-as-source` instead.
-
-### Requirement: Schema READMEs SHALL document associated skills
-Each schema README SHALL include an "Associated Skills" section listing exactly the skills from that schema's `skills.txt` with a one-line purpose each, linking to https://github.com/intent-driven-dev/skills, and noting that the skills are installed automatically by the install guide's skills step into `.agents/skills/`. The `spec-driven-with-adr` README SHALL point ADR skill references at the canonical skills repository rather than the retired `intent-driven-template` location and SHALL NOT list schema/skill packaging as pending.
-
-#### Scenario: Reader learns a schema's companion skills from its README
-- **WHEN** a user reads the "Associated Skills" section of a schema README
-- **THEN** it lists exactly the skills from that schema's `skills.txt`, each with a one-line purpose
-- **AND** it links to https://github.com/intent-driven-dev/skills
-- **AND** it notes automatic installation into `.agents/skills/` via the install guide
-
-#### Scenario: spec-driven-with-adr README points at the canonical skills repo
-- **WHEN** a user follows the ADR skills reference in `openspec/schemas/spec-driven-with-adr/README.md`
-- **THEN** it points to https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/architectural-decision-records
-- **AND** the README no longer lists "Package schema and associated skills together" as pending
-
-### Requirement: Each schema SHALL include usage and activation guidance
-Each custom schema folder SHALL include documentation that explains intended use, unsuitable use cases, and activation steps through `openspec/config.yaml`.
-
-#### Scenario: Coding agent activates schema from schema README
-- **WHEN** a coding agent reads a schema folder README
-- **THEN** it can determine whether the schema fits and can instruct the user to set `schema: <schema-name>` in `openspec/config.yaml`
 
 ### Requirement: Repository root SHALL provide catalog and install guidance for humans and agents
 The repository root SHALL include a `README.md` that explains the purpose of this schema collection, starts the main install section with an agent-oriented prompt that points to the raw root `README.md`, gives a self-install fallback for human readers, includes a dedicated agent-oriented install flow that removes ambiguity about prerequisites and copying the full schema folder, and lists only currently packaged schemas with canonical spec coverage. The install section SHALL also note that schemas declare companion skills in a `skills.txt` manifest and that the install guide's skills step installs those skills into `.agents/skills/` from https://github.com/intent-driven-dev/skills.
@@ -130,11 +93,3 @@ Every schema entry in the root catalog SHALL be nested under a single catalog se
 #### Scenario: Post-apply validation still passes
 - **WHEN** the root `README.md` update is applied
 - **THEN** `openspec schema validate` continues to pass for every packaged schema as a sanity check
-
-### Requirement: Schema changes SHALL be validated with OpenSpec CLI
-Any new schema or schema modification in this repository SHALL be verified by running `openspec schema validate <schema-name>` before considering the change complete.
-
-#### Scenario: Schema passes structural validation
-- **WHEN** a contributor finishes creating or editing a schema
-- **THEN** they run `openspec schema validate <schema-name>` and confirm the command reports successful validation
-

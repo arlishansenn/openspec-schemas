@@ -1,18 +1,20 @@
 # Intent-Driven OpenSpec Schema
 
-`intent-driven` is `behaviour-driven` plus durable Architecture Decision
-Records: contributor intent is captured in a proposal, observable behaviour is
-written as executable Gherkin scenarios inside Markdown specs (the acceptance
-suite every change must keep green), technical design is constrained by
-currently in-force ADRs, and each change completes an ADR review before task
-planning.
+`intent-driven` is a proposal-to-tasks workflow for changes where contributor
+intent, observable behaviour, technical design, and durable architectural
+decisions should all be captured before implementation.
+
+It keeps specs mergeable by default OpenSpec archive by generating
+`specs/<capability>/spec.md` files. The Markdown headings are the OpenSpec
+wrapper; the content inside each requirement and scenario should be written in
+Gherkin style with `GIVEN`, `WHEN`, and `THEN` steps.
 
 - Good fit: product or platform changes with meaningful behaviour and
   long-lived design decisions, cross-module work, or architecture choices that
   future changes should honor.
 - Not a good fit: small tactical fixes, docs-only changes, dependency bumps, or
-  behaviour-only work without durable design decisions, where `behaviour-driven`
-  (the same workflow without the ADR step) is enough.
+  behaviour-only work where `behaviour-driven` — the same workflow without the
+  ADR step — is enough.
 
 ## Activate
 
@@ -20,8 +22,9 @@ Set this in `openspec/config.yaml`:
 
 ```yaml
 schema: intent-driven
-stack: javascript # or python
 ```
+
+No other keys are required to activate the schema.
 
 ## Stage Gates
 
@@ -38,9 +41,8 @@ Gate expectations:
 
 - `proposal` states why the change matters and lists the capabilities that need
   behaviour specs.
-- `specs` creates one fenced-Gherkin Markdown spec per capability at
-  `specs/<capability>/spec.md`, extracted and linted with `gherkin-lint` before
-  the artifact is complete.
+- `specs` creates one OpenSpec Markdown delta file per capability at
+  `specs/<capability>/spec.md`.
 - `design` explains the implementation approach and accounts for currently
   in-force ADRs.
 - `adr` writes the per-change ADR review manifest at
@@ -48,58 +50,49 @@ Gate expectations:
   Durable repository-level ADR files are created only when the change
   introduces a major architectural decision that should persist beyond the
   change.
-- `tasks` are planned only after specs and ADR review are complete: first-time
-  acceptance-suite setup (once per project, keyed on `stack:`), then one
-  red → green → commit task per pending step definition, then completion with
-  the full suite green. Implementation honours in-force ADRs under
-  `<repo>/adr/`.
+- `tasks` are planned only after proposal, specs, design, and ADR artifacts are
+  complete.
 
 ## Spec Format
 
-A spec is a standard Markdown `spec.md`: prose may appear anywhere, and ALL
-executable Gherkin lives inside fences opened by ` ```gherkin ` at column 0.
-Each file's fences concatenate into exactly one `Feature:` (the capability);
-`Rule:` is one requirement described with SHALL/MUST, and every `Rule:` has at
-least one Given/When/Then `Scenario:`. Delta operations are `# @openspec:`
-comments inside a fence, immediately above the `Rule:` they apply to:
+Use OpenSpec Markdown delta headers so archive can merge the change:
 
-````markdown
-# User data export
+```md
+## ADDED Requirements
 
-```gherkin
-Feature: User data export
+### Requirement: User data export
+The system SHALL let a user export their own saved data.
 
-  # @openspec: ADDED
-  Rule: Users can export their own data
-    The system MUST let a user export their own saved data.
-
-    Scenario: Successful CSV export
-      Given a user has saved data
-      When the user exports their data as CSV
-      Then the system provides a CSV file containing the user's data
+#### Scenario: Successful CSV export
+- **GIVEN** a user has saved data
+- **WHEN** the user exports their data as CSV
+- **THEN** the system provides a CSV file containing the user's data
 ```
-````
 
-At test time the Gherkin is extracted to `.feature` files under
-`acceptance-tests/.extracted/` and linted with `gherkin-lint`, per the
-`acceptance-test-authoring` skill. The machine-readable definition of the
-format (identical to `behaviour-driven`'s) is the `format:` block in
-`schema.yaml`.
+Requirements use `### Requirement:` with a SHALL/MUST description; scenarios use
+exactly four hashtags (`#### Scenario:`) with `GIVEN`/`WHEN`/`THEN` steps. Every
+requirement needs at least one scenario. `MODIFIED` entries copy the entire
+existing requirement block from `openspec/specs/<capability>/spec.md` before
+editing, so no detail is lost at archive time.
 
-## Acceptance Enforcement
+The schema package deliberately ships no Gherkin lint configuration, no
+extraction tooling, and no acceptance-test runner — see below.
 
-The workflow is governed by the same two rules as `behaviour-driven`:
+## Executable Specs Are Skill-Provided
 
-1. **Acceptance tests must always pass.** Code without a driving spec delta is
-   reverted and redone spec-first — never patched into passing.
-2. **Specs and code are never modified together.** A unit of work touches
-   either `openspec/` or application code, never both (`tasks.md` exempt), per
-   the `bdd-zone-check` skill.
+This schema describes the artifact workflow only. It does not define a
+fenced-Gherkin format, extract `.feature` files, run an acceptance suite, or
+enforce specs/code zone isolation. All of that is provided by the opt-in
+[`spec-as-source`](https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/spec-as-source)
+skill, which treats `spec.md` as the executable source of truth and overrides
+this schema's `spec.md` and `tasks.md` templates with its own references when
+active. `spec-as-source` in turn requires the `gherkin-authoring` and
+[`acceptance-test-authoring`](https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/acceptance-test-authoring)
+skills, the latter of which owns runner setup, extraction, linting, reports, and
+the `stack:` key those need.
 
-The acceptance suite — extraction, runners, reports, and linting — is defined
-by the [`acceptance-test-authoring`](https://github.com/intent-driven-dev/skills/tree/main/.agents/skills/acceptance-test-authoring)
-skill, which requires a `stack:` key in `openspec/config.yaml`. Read the
-skill's documentation for the supported stacks and setup details.
+Adopt the skill when you want specs executed as acceptance tests; use the schema
+alone when you want the artifact discipline without the test harness.
 
 ## ADR Persistence
 
@@ -125,13 +118,13 @@ openspec schema validate intent-driven
 
 This schema declares its companion skills in `skills.txt`; they are installed automatically by Step 6 of `AGENT_INSTALL.md` into `.agents/skills/`, sourced from [intent-driven-dev/skills](https://github.com/intent-driven-dev/skills).
 
-- `acceptance-test-authoring` — the acceptance-suite contract: Gherkin extraction from `spec.md` fences, effective-spec composition, runner setup for both stacks, linting, and reports.
+- `acceptance-test-authoring` — acceptance-suite setup: Gherkin extraction, effective-spec composition, runners for both stacks, linting, and reports.
 - `architectural-decision-records` — drafting/reviewing ADRs; includes MADR, Nygard, and Y-statement templates.
-- `bdd-zone-check` — spec-first discipline and specs/code zone isolation, with a reference enforcement hook.
 - `c4-diagrams` — C4-style architecture diagrams in ASCII or Mermaid.
 - `gherkin-authoring` — writing and reviewing Gherkin/BDD scenarios.
 - `glossary` — keeping domain/technical terms consistent across artifacts.
 - `grill-me` — relentless interviewing to stress-test a plan or design.
 - `openspec-git-discipline` — git hygiene for OpenSpec propose/apply/archive workflows.
+- `spec-as-source` — opt-in workflow making `spec.md` the executable source of truth: fenced-Gherkin authoring, acceptance-first task ordering, and specs/code zone isolation.
 
 For more schemas, refer to https://github.com/intent-driven-dev/openspec-schemas.
