@@ -1,5 +1,18 @@
 # OpenSpec Custom Schemas
 
+> **Fork notice.** This is `arlishansenn/openspec-schemas`, a fork of
+> [`intent-driven-dev/openspec-schemas`](https://github.com/intent-driven-dev/openspec-schemas)
+> with exactly one deliberate divergence: repository-level ADRs are written to
+> **`docs/adr/`**, not the upstream's top-level `adr/`.
+>
+> Why: the [`mattpocock/skills`](https://github.com/mattpocock/skills)
+> `domain-modeling` skill hardcodes `docs/adr/` as the domain-doc layout, and
+> upstream deliberately removed the ADR folder parameter
+> (`2026-05-10-remove-adr-folder-parameter`), so the two cannot be reconciled by
+> configuration. Forking is what keeps one ADR folder, one sequence, and one
+> Supersedes graph. Affects the `intent-driven` and `spec-driven-with-adr`
+> schemas; everything else tracks upstream.
+
 Custom [OpenSpec](https://github.com/Fission-AI/OpenSpec) schemas packaged as copyable folders under `openspec/schemas/`.
 
 Default OpenSpec includes the `spec-driven` schema, which is a strong general-purpose workflow. This repo adds more focused workflows for specific delivery contexts, and also demonstrates how to customise OpenSpec for different styles of work.
@@ -108,8 +121,8 @@ For more details, see `openspec/schemas/behaviour-driven/README.md`.
 ### Spec-Driven With ADR
 
 Experimental proposal-to-tasks workflow for changes that also need durable
-Architecture Decision Records persisted under the target repository's top-level
-`adr/` folder. `intent-driven` shares this schema's ADR handling and adds
+Architecture Decision Records persisted under the target repository's `docs/adr/`
+folder. `intent-driven` shares this schema's ADR handling and adds
 behaviour-focused specs plus a larger skill set — prefer it unless you want
 plain spec-driven specs with ADRs and nothing more.
 

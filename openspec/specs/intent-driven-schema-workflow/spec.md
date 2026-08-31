@@ -61,14 +61,14 @@ Affected schema:
 - **AND** the README does not describe `specs` and `design` as sequential.
 
 ### Requirement: Intent-driven schema SHALL persist durable decisions with per-change ADR review
-The `intent-driven` schema SHALL require each change to complete ADR review through a change-local manifest at `openspec/changes/<change>/adr.md`, while preserving durable architectural decisions as immutable ADR files under the target repository's top-level `adr/` folder when a change introduces decisions worth carrying forward.
+The `intent-driven` schema SHALL require each change to complete ADR review through a change-local manifest at `openspec/changes/<change>/adr.md`, while preserving durable architectural decisions as immutable ADR files under the target repository's `docs/adr/` folder when a change introduces decisions worth carrying forward.
 
 #### Scenario: ADR artifact uses a change-local completion marker
 - **GIVEN** the affected schema is `intent-driven`
 - **WHEN** `openspec/schemas/intent-driven/schema.yaml` defines the `adr` artifact
 - **THEN** the artifact `generates` value MUST be `adr.md`
 - **AND** the artifact completion check MUST be scoped to `openspec/changes/<change>/adr.md`
-- **AND** existing files under the repository-level `adr/` folder MUST NOT satisfy completion for a new change.
+- **AND** existing files under the repository-level `docs/adr/` folder MUST NOT satisfy completion for a new change.
 
 #### Scenario: ADR artifact records durable ADR manifest entries
 - **GIVEN** the affected schema is `intent-driven`
@@ -76,7 +76,7 @@ The `intent-driven` schema SHALL require each change to complete ADR review thro
 - **THEN** the change-local `adr.md` artifact MUST act as a concise manifest, not a duplicate full ADR
 - **AND** it MUST state that ADR review was completed for the change
 - **AND** it MUST list existing in-force ADRs reviewed for the change
-- **AND** if the change introduces any new durable architectural decision, a corresponding repository-level ADR file MUST be created under `<repo>/adr/`
+- **AND** if the change introduces any new durable architectural decision, a corresponding repository-level ADR file MUST be created under `<repo>/docs/adr/`
 - **AND** the change-local `adr.md` artifact MUST reference every repository-level ADR file created for the change
 - **AND** it MUST NOT duplicate the full context, decision, or consequences content from any repository-level ADR file
 - **AND** when no new repository-level ADR is needed, it MUST explicitly state that no major durable architectural decisions were introduced.
@@ -84,19 +84,19 @@ The `intent-driven` schema SHALL require each change to complete ADR review thro
 #### Scenario: ADR artifact preserves repository-level decision history
 - **GIVEN** a project activates `schema: intent-driven`
 - **WHEN** the `adr` artifact identifies a durable architectural decision that is not already captured by an in-force ADR
-- **THEN** the schema instructions MUST direct ADR files to `<repo>/adr/NNNN-kebab-title.md`
-- **AND** `<repo>/adr/` MUST mean a top-level folder beside `openspec/`, not a folder inside `openspec/`
+- **THEN** the schema instructions MUST direct ADR files to `<repo>/docs/adr/NNNN-kebab-title.md`
+- **AND** `<repo>/docs/adr/` MUST mean the `docs/adr/` folder in the target repository, not a folder inside `openspec/`
 - **AND** accepted ADR immutability and supersession rules MUST remain intact.
 
 #### Scenario: Existing ADRs are context, not completion
 - **GIVEN** a project uses the `intent-driven` schema
-- **AND** the repository-level `adr/` folder already contains one or more ADR markdown files from previous changes
+- **AND** the repository-level `docs/adr/` folder already contains one or more ADR markdown files from previous changes
 - **WHEN** a new change has no `openspec/changes/<change>/adr.md`
 - **THEN** the `adr` artifact MUST NOT be considered complete
 - **AND** downstream task readiness MUST remain blocked until the change-local ADR review artifact exists.
 
 #### Scenario: Design reads currently in-force ADRs
-- **GIVEN** a project has existing ADR files under `<repo>/adr/`
+- **GIVEN** a project has existing ADR files under `<repo>/docs/adr/`
 - **WHEN** the `design` artifact is created
 - **THEN** the schema instructions require the contributor to identify currently in-force ADRs by walking supersession links
 - **AND** only currently in-force ADRs constrain the design.
@@ -111,7 +111,7 @@ The `intent-driven` schema documentation SHALL distinguish the per-change ADR re
 
 #### Scenario: ADR persistence remains documented
 - **WHEN** a contributor reads `openspec/schemas/intent-driven/README.md`
-- **THEN** it explains that durable ADR files are generated under the target repository's top-level `adr/` folder
+- **THEN** it explains that durable ADR files are generated under the target repository's `docs/adr/` folder
 - **AND** it explains that repository-level ADR files are created only when the change introduces a major durable architectural decision.
 
 ### Requirement: Intent-driven schema SHALL validate cleanly
@@ -145,7 +145,7 @@ Affected schema:
 - **THEN** `proposal.md`, `spec.md`, `design.md`, `adr.md`, and `tasks.md` are identical.
 
 ### Requirement: Intent-driven tasks SHALL use a generic task template honouring ADRs
-The `intent-driven` schema SHALL generate `tasks.md` from a generic numbered task-group template with `- [ ] X.Y` checkboxes, SHALL NOT reference a `stack:` key or acceptance-suite scaffolding, and SHALL direct implementation to reference specs for what to build, design for how to build it, and currently in-force ADRs under `<repo>/adr/` for durable architectural commitments to honour.
+The `intent-driven` schema SHALL generate `tasks.md` from a generic numbered task-group template with `- [ ] X.Y` checkboxes, SHALL NOT reference a `stack:` key or acceptance-suite scaffolding, and SHALL direct implementation to reference specs for what to build, design for how to build it, and currently in-force ADRs under `<repo>/docs/adr/` for durable architectural commitments to honour.
 
 Affected schema:
 - `intent-driven` (`openspec/schemas/intent-driven/`)
@@ -158,7 +158,7 @@ Affected schema:
 
 #### Scenario: Implementation honours in-force ADRs
 - **WHEN** `tasks.md` is generated
-- **THEN** task guidance references specs for what to build, design for how to build it, and `<repo>/adr/` for durable architectural commitments to honour.
+- **THEN** task guidance references specs for what to build, design for how to build it, and `<repo>/docs/adr/` for durable architectural commitments to honour.
 
 ### Requirement: Intent-driven README SHALL document the workflow and its companion skills
 The `intent-driven` README MUST describe the schema as a proposal-to-tasks workflow capturing intent, behaviour, design, and durable decisions; document the OpenSpec Markdown delta spec format; show the artifact flow `proposal -> (specs, design) -> adr -> tasks`; document activation as `schema: intent-driven` without a `stack:` key; and retain an "Associated Skills" section listing exactly the skills in the schema's `skills.txt`. Acceptance testing, fenced Gherkin, and specs/code zone isolation MUST be attributed to the `spec-as-source` skill rather than to the schema.

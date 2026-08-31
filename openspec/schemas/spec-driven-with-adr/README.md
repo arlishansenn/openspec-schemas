@@ -47,9 +47,9 @@ for OpenSpec artifact completion. It records that ADR review happened, lists
 the in-force ADR context that was reviewed, and references any durable ADR files
 created for the change.
 
-Durable ADR files are generated under the target repository's top-level `adr/`
+Durable ADR files are generated under the target repository's `docs/adr/`
 folder, not inside the OpenSpec change folder. Create
-`adr/NNNN-kebab-title.md` only when the change introduces a major durable
+`docs/adr/NNNN-kebab-title.md` only when the change introduces a major durable
 architectural decision. Accepted ADRs are immutable. If a future decision
 changes a prior ADR, create a new ADR that supersedes the old one and leave the
 original file unchanged.
