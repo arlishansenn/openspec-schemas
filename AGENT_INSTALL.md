@@ -1,5 +1,10 @@
 # Agent Install Guide
 
+> **Install from this fork, not upstream.** `arlishansenn/openspec-schemas`
+> writes repository-level ADRs to `docs/adr/` so the schema agrees with the
+> `mattpocock/skills` `domain-modeling` layout. Cloning upstream instead
+> reintroduces the top-level `adr/` path and splits the ADR sequence.
+
 Use this flow when installing any schema from this repository into an existing OpenSpec project. Schemas declare their companion skills in a `skills.txt` manifest inside the schema directory; those skills are sourced from https://github.com/intent-driven-dev/skills and installed in Step 6.
 
 ## Prerequisites
@@ -10,7 +15,7 @@ Use this flow when installing any schema from this repository into an existing O
 ## Step 1 — Clone This Repository
 
 ```bash
-git clone https://github.com/intent-driven-dev/openspec-schemas.git /tmp/openspec-schemas
+git clone https://github.com/arlishansenn/openspec-schemas.git /tmp/openspec-schemas
 ```
 
 ## Step 2 — Select a Schema
